@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Mes Mangas - MangaReader{% endblock %}
+{% block body %}
+<div class="container">
+    <div class="manga-list-header">
+        <h1>Bibliothèque</h1>
+        <p class="manga-count">{{ mangas|length }} manga{{ 's' if mangas|length > 1 else '' }}</p>
+        <div class="library-controls">
+            <div class="view-toggle">
+                <button id="list-view-btn" class="view-btn active" data-view="list">
+                    <span class="icon">📋</span>
+                    <span class="text">Liste</span>
+                </button>
+                <button id="grid-view-btn" class="view-btn" data-view="grid">
+                    <span class="icon">⊞</span>
+                    <span class="text">Grille</span>
+                </button>
+            </div>
+            <div class="sort-controls">
+                <label for="sort-select" class="control-label">Trier par:</label>
+                <select id="sort-select" class="control-select">
+                    <option value="date-desc">Date (récent)</option>
+                    <option value="date-asc">Date (ancien)</option>
+                    <option value="name-asc">Nom (A-Z)</option>
+                    <option value="name-desc">Nom (Z-A)</option>
+                </select>
+            </div>
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="type-filter" class="control-label">Type:</label>
+                    <select id="type-filter" class="control-select">
+                        <option value="all">Tous</option>
+                        <option value="manga">Manga</option>
+                        <option value="webtoon">Webtoon</option>
+                    </select>
+                </div>
+                <div class="filter-group tag-filter-group">
+                    <label class="control-label">Tags:</label>
+                    <div class="tag-filter-container">
+                        <button type="button" class="tag-filter-toggle" id="tag-filter-toggle">
+                            <span id="tag-filter-text">Sélectionner des tags</span>
+                            <span class="tag-filter-count" id="tag-filter-count" style="display: none;">0</span>
+                        </button>
+                        <div class="tag-filter-dropdown" id="tag-filter-dropdown" style="display: none;">
+                            <div class="tag-filter-actions">
+                                <button type="button" class="tag-filter-action" id="select-all-tags">Tout sélectionner</button>
+                                <button type="button" class="tag-filter-action" id="deselect-all-tags">Tout désélectionner</button>
+                            </div>
+                            <div class="tag-filter-checkboxes">
+                                {% for tag in available_tags %}
+                                <label class="tag-checkbox-label">
+                                    <input type="checkbox" class="tag-checkbox" value="{{ tag }}" data-tag="{{ tag|lower }}">
+                                    <span>{{ tag }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-toggle">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="show-all-toggle" checked>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">Afficher tous les mangas</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    {% if mangas %}
+    <!-- List View (Default) -->
+    <div class="manga-list" id="manga-list-view">
+        {% for manga in mangas %}
+        <div class="manga-list-item"
+             data-followed="{{ 'true' if manga.is_followed else 'false' }}"
+             data-comic-type="{{ manga.comic_type }}"
+             data-tags="{{ manga.tags|join(',') }}"
+             data-name="{{ manga.name }}"
+             data-date="{{ manga.last_updated }}"
+             data-timestamp="{{ manga.timestamp }}">
+            <div class="manga-list-info">
+                <h3 class="manga-list-title">{{ manga.name }}</h3>
+            </div>
+            <div class="manga-list-right">
+                <div class="manga-list-stats">
+                    <span class="manga-list-chapters">{{ manga.number_of_chapters }} chapitres</span>
+                    <span class="manga-list-status">{{ manga.last_updated }}</span>
+                </div>
+                <div class="manga-list-actions">
+                    <a href="{{ request.url_for('manga_detail', manga_id=manga.id) }}" class="btn btn-primary">
+                        Lire
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Grid View -->
+    <div class="manga-grid" id="manga-grid-view" style="display: none;">
+        {% for manga in mangas %}
+        <div class="manga-card"
+             data-followed="{{ 'true' if manga.is_followed else 'false' }}"
+             data-comic-type="{{ manga.comic_type }}"
+             data-tags="{{ manga.tags|join(',') }}"
+             data-name="{{ manga.name }}"
+             data-date="{{ manga.last_updated }}"
+             data-timestamp="{{ manga.timestamp }}">
+            <div class="manga-cover">
+                <img src="{{ request.url_for('serve_cover', manga_id=manga.id) }}"
+                     alt="{{ manga.name }} - Couverture"
+                     class="cover-image"
+                     onerror="this.src='https://via.placeholder.com/200x280/2c3e50/ecf0f1?text={{ manga.name|urlencode }}';">
+            </div>
+            <div class="manga-info">
+                <h3 class="manga-title">{{ manga.name }}</h3>
+                <div class="manga-stats">
+                    <span class="chapter-count" data-chapters="{{ manga.number_of_chapters }}">{{ manga.number_of_chapters }} chapitres</span>
+                    <span class="manga-status">{{ manga.last_updated }}</span>
+                </div>
+                <div class="manga-actions">
+                    <a href="{{ request.url_for('manga_detail', manga_id=manga.id) }}" class="btn btn-primary">
+                        Lire
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-mangas">
+        <div class="no-mangas-content">
+            <h2>Aucun manga suivi</h2>
+            <p>Il semble que vous n'ayez pas encore de mangas suivis.</p>
+            <p>Vérifiez que le fichier <code>asura/followed.json</code> existe et contient des mangas.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- View Toggle JavaScript -->
+<script src="{{ request.url_for('static', path='js/index.js') }}"></script>
+
+{% endblock %}
+
+

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Accueil - VScans{% endblock %}
+{% block body %}
+<div class="container">
+    <div class="hero">
+        <h1>Bienvenue sur VScans</h1>
+    </div>
+
+    <!-- Sorti récemment -->
+    {% if recently_released %}
+    <div class="manga-section">
+        <h2 class="section-title">Sortie récente</h2>
+        <div class="manga-scroll-container">
+            <div class="manga-scroll-list">
+                {% for manga in recently_released %}
+                <div class="manga-card">
+                    <div class="manga-cover">
+                        <img src="{{ request.url_for('serve_cover', manga_id=manga.id) }}"
+                             alt="{{ manga.name }} - Couverture"
+                             class="cover-image"
+                             onerror="this.src='https://via.placeholder.com/200x280/2c3e50/ecf0f1?text={{ manga.name|urlencode }}';">
+                    </div>
+                    <div class="manga-info">
+                        <h3 class="manga-title">{{ manga.name }}</h3>
+                        <div class="manga-stats">
+                            <span class="chapter-count" data-chapters="{{ manga.number_of_chapters }}">{{ manga.number_of_chapters }} chapitres</span>
+                            <span class="manga-status">{{ manga.last_updated }}</span>
+                        </div>
+                        <div class="manga-actions">
+                            <a href="{{ request.url_for('manga_detail', manga_id=manga.id) }}" class="btn btn-primary">
+                                Lire
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Suivi -->
+    {% if followed %}
+    <div class="manga-section">
+        <h2 class="section-title">Mangas Suivis</h2>
+        <div class="manga-scroll-container">
+            <div class="manga-scroll-list">
+                {% for manga in followed %}
+                <div class="manga-card">
+                    <div class="manga-cover">
+                        <img src="{{ request.url_for('serve_cover', manga_id=manga.id) }}"
+                             alt="{{ manga.name }} - Couverture"
+                             class="cover-image"
+                             onerror="this.src='https://via.placeholder.com/200x280/2c3e50/ecf0f1?text={{ manga.name|urlencode }}';">
+                    </div>
+                    <div class="manga-info">
+                        <h3 class="manga-title">{{ manga.name }}</h3>
+                        <div class="manga-stats">
+                            <span class="chapter-count" data-chapters="{{ manga.number_of_chapters }}">{{ manga.number_of_chapters }} chapitres</span>
+                            <span class="manga-status">{{ manga.last_updated }}</span>
+                        </div>
+                        <div class="manga-actions">
+                            <a href="{{ request.url_for('manga_detail', manga_id=manga.id) }}" class="btn btn-primary">
+                                Lire
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Nouveaux Mangas -->
+    {% if nouveautes %}
+    <div class="manga-section">
+        <h2 class="section-title">Nouveaux Mangas</h2>
+        <div class="manga-scroll-container">
+            <div class="manga-scroll-list">
+                {% for manga in nouveautes %}
+                <div class="manga-card">
+                    <div class="manga-cover">
+                        <img src="{{ request.url_for('serve_cover', manga_id=manga.id) }}"
+                             alt="{{ manga.name }} - Couverture"
+                             class="cover-image"
+                             onerror="this.src='https://via.placeholder.com/200x280/2c3e50/ecf0f1?text={{ manga.name|urlencode }}';">
+                    </div>
+                    <div class="manga-info">
+                        <h3 class="manga-title">{{ manga.name }}</h3>
+                        <div class="manga-stats">
+                            <span class="chapter-count" data-chapters="{{ manga.number_of_chapters }}">{{ manga.number_of_chapters }} chapitres</span>
+                            <span class="manga-status">{{ manga.last_updated }}</span>
+                        </div>
+                        <div class="manga-actions">
+                            <a href="{{ request.url_for('manga_detail', manga_id=manga.id) }}" class="btn btn-primary">
+                                Lire
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

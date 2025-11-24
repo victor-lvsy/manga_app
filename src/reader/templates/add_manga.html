@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Ajouter un manga - VScans{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ request.url_for('static', path='css/forms.css') }}">
+{% endblock %}
+{% block body %}
+<section class="hero-section">
+    <div class="hero-content">
+        <div>
+            <h1 class="manga-title">Créer un nouveau manga</h1>
+            <p class="manga-description">
+                Saisissez les informations principales du titre.
+                Le scraper se chargera ensuite de rapatrier les chapitres.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="container add-manga">
+    {% if feedback %}
+    <div class="alert {{ 'alert-error' if feedback.type == 'error' else 'alert-success' }}">
+        {{ feedback.message }}
+    </div>
+    {% endif %}
+
+    <div class="add-manga-grid">
+        <form class="card form-card" method="post" action="{{ request.url_for('add_manga') }}" id="manga-form">
+            <div class="form-grid">
+                <label class="form-field">
+                    <span>Nom</span>
+                    <input type="text" name="name" placeholder="Exemple" required>
+                </label>
+
+                <label class="form-field">
+                    <span>URL source</span>
+                    <input type="url" name="url" placeholder="https://example.com/manga" required>
+                </label>
+
+                <label class="form-field">
+                    <span>Scanlation</span>
+                    <select name="scanlation_group" required>
+                        <option value="" disabled selected>Choisissez une team</option>
+                        {% for group in scanlation_groups %}
+                        <option value="{{ group.value }}">{{ group.value.replace('_', ' ')|title }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="form-field">
+                    <span>Type</span>
+                    <select name="comic_type" required>
+                        <option value="" disabled selected>Sélectionnez un type</option>
+                        {% for comic_type in comic_types %}
+                        <option value="{{ comic_type.value }}">{{ comic_type.value|title }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="form-field">
+                    <span>Status</span>
+                    <select name="status" required>
+                        <option value="" disabled selected>Statut de la série</option>
+                        {% for status in statuses %}
+                        <option value="{{ status.value }}">{{ status.value|title }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="form-field">
+                    <span>Fréquence de mise à jour</span>
+                    <select name="update_frequency" required>
+                        <option value="" disabled selected>Sélectionnez une fréquence</option>
+                        {% for frequency in update_frequencies %}
+                        <option value="{{ frequency.value }}">{{ frequency.value.replace('_', ' ')|title }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="form-field">
+                    <span>Tags (séparés par une virgule)</span>
+                    <input type="text" name="tags" placeholder="action, aventure, fantasy">
+                </label>
+            </div>
+
+            <div class="form-meta">
+                <p class="form-help">
+                    Les chapitres seront ajoutés automatiquement lors du prochain passage du scraper.
+                </p>
+                <div class="form-status" role="status">
+                    <span data-url-status>Aucune analyse encore.</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a class="btn btn-secondary" href="{{ request.url_for('library') }}">Annuler</a>
+                <button class="btn btn-primary" type="submit">Créer le manga</button>
+            </div>
+        </form>
+
+        <aside class="form-sidebar">
+            <div class="insight-card">
+                <h3>Prévisualisation</h3>
+                <dl>
+                    <div>
+                        <dt>Dossier généré</dt>
+                        <dd data-folder-preview>—</dd>
+                    </div>
+                    <div>
+                        <dt>Détection scanlation</dt>
+                        <dd data-scanlation-hint>En attente d'URL…</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="insight-card">
+                <h3>Tags disponibles</h3>
+                <p class="insight-description">Cliquez pour ajouter ou retirer un tag.</p>
+                <div class="tag-suggestions" data-tags='{{ available_tags|tojson }}'>
+                    {% for tag in available_tags %}
+                    <button type="button" class="tag-chip" data-tag="{{ tag }}">{{ tag }}</button>
+                    {% endfor %}
+                </div>
+                <p class="tag-status" data-tag-status>Aucun tag sélectionné.</p>
+            </div>
+        </aside>
+    </div>
+
+    <section class="tag-form-card">
+        <h2>Créer un nouveau tag</h2>
+        {% if tag_feedback %}
+        <div class="alert {{ 'alert-error' if tag_feedback.type == 'error' else 'alert-success' }}">
+            {{ tag_feedback.message }}
+        </div>
+        {% endif %}
+        <form method="post" action="{{ request.url_for('create_tag') }}" class="tag-form" id="tag-form">
+            <label class="form-field">
+                <span>Nom du tag</span>
+                <input type="text" name="new_tag" placeholder="Ex: Thriller" required>
+            </label>
+            <button class="btn btn-primary" type="submit">Ajouter le tag</button>
+        </form>
+    </section>
+</section>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{{ request.url_for('static', path='js/add-manga.js') }}"></script>
+{% endblock %}

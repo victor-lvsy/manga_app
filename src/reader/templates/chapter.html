@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ chapter }} - MangaReader{% endblock %}
+{% block body %}
+<div class="toolbar">
+    {% if prev_chapter %}
+        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=prev_chapter) }}" class="prev-chapter">&larr; Prev</a>
+    {% else %}
+        <span class="disabled">&larr; Prev</span>
+    {% endif %}
+    <a href="/manga/{{ manga_id }}" class="manga-index">Index</a>
+    {% if next_chapter %}
+        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=next_chapter) }}" class="next-chapter">Next &rarr;</a>
+    {% else %}
+        <span class="disabled">Next &rarr;</span>
+    {% endif %}
+    {% if current_user and current_user.role.value == 'admin' %}
+        <div style="display: flex; gap: 8px; margin-left: auto;">
+            <form method="post" action="{{ request.url_for('blacklist_delete_chapter', manga_id=manga_id, chapter_number=chapter) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir blacklister et supprimer ce chapitre ? Cette action est irréversible.');">
+                <button type="submit" class="blacklist-delete-chapter-btn" title="Blacklister et supprimer le chapitre">🚫 Blacklister</button>
+            </form>
+            <form method="post" action="{{ request.url_for('delete_chapter', manga_id=manga_id, chapter_number=chapter) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce chapitre ? Cette action est irréversible.');">
+                <button type="submit" class="delete-chapter-btn" title="Supprimer le chapitre">🗑️ Supprimer</button>
+            </form>
+        </div>
+    {% endif %}
+</div>
+<div class="chapter-container">
+    {% for page in pages %}
+        <figure class="page">
+            <img loading="lazy" src="{{ request.url_for('serve_page', manga_id=manga_id, page_id=page) }}" alt="{{ page }}">
+        </figure>
+    {% endfor %}
+</div>
+
+<!-- Chapter-specific JavaScript -->
+<script>
+// Pass chapter data to the module
+window.chapterData = {
+    mangaId: '{{ manga_id }}',
+    chapterPath: '{{ chapter }}',
+    prevChapter: '{{ prev_chapter or "" }}',
+    nextChapter: '{{ next_chapter or "" }}',
+    totalImages: {{ pages|length }}
+};
+</script>
+<script src="{{ request.url_for('static', path='js/chapter-viewer.js') }}"></script>
+
+{% endblock %}

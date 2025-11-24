@@ -1,0 +1,460 @@
+/**
+ * Component Styles
+ * Styles for JavaScript-enhanced components and interactions
+ */
+
+/* Image Loading States */
+.cover-image.loading,
+.mobile-cover-image.loading {
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+}
+
+.cover-image.loaded,
+.mobile-cover-image.loaded {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.cover-image.error,
+.mobile-cover-image.error {
+    opacity: 0.8;
+    filter: grayscale(20%);
+}
+
+@keyframes loading-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 10000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    max-width: 300px;
+    word-wrap: break-word;
+    box-shadow: var(--shadow-lg);
+}
+
+.notification-success {
+    background: #27ae60;
+}
+
+.notification-error {
+    background: #e74c3c;
+}
+
+.notification-warning {
+    background: #f39c12;
+}
+
+.notification-info {
+    background: #3498db;
+}
+
+/* Mobile Menu Enhancements */
+.nav-menu.active {
+    backdrop-filter: blur(10px);
+}
+
+/* Simplify navbar: remove shimmer effect on nav links */
+.navbar .nav-link { position: static; overflow: visible; }
+.navbar .nav-link::before { display: none; content: none; }
+
+/* Manga Card Enhancements */
+.manga-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.manga-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.manga-card:hover::before {
+    transform: translateX(100%);
+}
+
+.manga-card .manga-info {
+    position: relative;
+    z-index: 2;
+}
+
+/* Button Enhancements */
+.btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    border-top-color: var(--accent-color);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Force Update Button Styles */
+.btn.updating {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn.updating .loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.btn.updating .loading-text {
+    vertical-align: middle;
+}
+
+.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Update Feedback */
+.update-feedback {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fade In Animation */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Slide In Animation */
+.slide-in-left {
+    transform: translateX(-100%);
+    animation: slideInLeft 0.5s ease forwards;
+}
+
+.slide-in-right {
+    transform: translateX(100%);
+    animation: slideInRight 0.5s ease forwards;
+}
+
+@keyframes slideInLeft {
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* Pulse Animation */
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Responsive Enhancements */
+@media (max-width: 768px) {
+    .notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        transform: translateY(-100%);
+    }
+
+    .notification.show {
+        transform: translateY(0);
+    }
+
+    .manga-card:hover {
+        transform: none;
+    }
+
+    .manga-card::before {
+        display: none;
+    }
+}
+
+/* Focus States for Accessibility */
+.btn:focus,
+.nav-link:focus,
+.manga-card:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .cover-image.loading,
+    .mobile-cover-image.loading {
+        background: var(--bg-primary);
+        border: 2px solid var(--text-primary);
+    }
+
+    .notification {
+        border: 2px solid white;
+    }
+}
+
+/* Chapter Viewer Styles */
+.toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(20, 21, 24, 0.9);
+    border-bottom: 1px solid var(--border-color);
+    backdrop-filter: blur(6px);
+}
+
+.toolbar a,
+.toolbar .disabled {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.toolbar a:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.toolbar .disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.chapter-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 12px 40px;
+}
+
+.chapter-container.fullscreen {
+    max-width: none;
+    padding: 0;
+}
+
+.page {
+    margin: 0 0 12px 0;
+    text-align: center;
+}
+
+.page img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 auto;
+    user-select: none;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.page img.loading {
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+    min-height: 400px;
+}
+
+.page img.loaded {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.page img.error {
+    opacity: 0.8;
+    filter: grayscale(20%);
+    border: 2px dashed var(--border-color);
+}
+
+/* Chapter Navigation Enhancements */
+.prev-chapter,
+.next-chapter {
+    position: relative;
+    overflow: hidden;
+}
+
+.prev-chapter::before,
+.next-chapter::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.prev-chapter:hover::before,
+.next-chapter:hover::before {
+    left: 100%;
+}
+
+/* Mobile Chapter Viewer */
+@media (max-width: 768px) {
+    .toolbar {
+        padding: 8px 10px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .toolbar a,
+    .toolbar .disabled {
+        padding: 6px 10px;
+        font-size: 0.9rem;
+    }
+
+    .chapter-container {
+        padding: 40px 8px 20px;
+    }
+
+    .page {
+        margin: 0 0 8px 0;
+    }
+
+    .page img {
+        border-radius: 4px;
+    }
+}
+
+/* Fullscreen Mode */
+.chapter-container.fullscreen .page img {
+    max-height: 100vh;
+    object-fit: contain;
+}
+
+.chapter-container.fullscreen .toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .cover-image.loading,
+    .mobile-cover-image.loading,
+    .page img.loading {
+        animation: none;
+        background: var(--bg-tertiary);
+    }
+
+    .btn::before,
+    .manga-card::before,
+    .nav-link::before,
+    .prev-chapter::before,
+    .next-chapter::before {
+        display: none;
+    }
+
+    .fade-in,
+    .slide-in-left,
+    .slide-in-right {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}

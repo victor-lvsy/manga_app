@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+{% block title %}Administration - VScans{% endblock %}
+{% block body %}
+<div class="container">
+    <div class="hero">
+        <h1>Administration</h1>
+        <p>Gestion des utilisateurs et des paramètres système</p>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="admin-section">
+        <h2 class="section-title">Gestion des utilisateurs</h2>
+
+        <!-- User List -->
+        <div class="user-list-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom d'utilisateur</th>
+                        <th>Rôle</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>
+                            <span class="role-badge role-{{ user.role.value }}">
+                                {{ user.role.value }}
+                            </span>
+                        </td>
+                        <td class="action-buttons">
+                            {% if user.role.value == "reader" %}
+                            <form method="POST" action="{{ request.url_for('admin_promote_user') }}" style="display: inline;">
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <button type="submit" class="btn btn-sm btn-primary">Promouvoir Admin</button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="{{ request.url_for('admin_demote_user') }}" style="display: inline;">
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <button type="submit" class="btn btn-sm btn-warning">Rétrograder Lecteur</button>
+                            </form>
+                            {% endif %}
+                            {% if user.id != current_user.id %}
+                            <form method="POST" action="{{ request.url_for('admin_delete_user') }}" style="display: inline;"
+                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Create User Form -->
+        <div class="admin-form-section">
+            <h3>Créer un nouvel utilisateur</h3>
+            <form method="POST" action="{{ request.url_for('admin_create_user') }}" class="admin-form">
+                <div class="form-group">
+                    <label for="username">Nom d'utilisateur:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mot de passe:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="role">Rôle:</label>
+                    <select id="role" name="role" required>
+                        <option value="reader">Lecteur</option>
+                        <option value="admin">Administrateur</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Créer l'utilisateur</button>
+            </form>
+        </div>
+
+        <!-- Feedback Messages -->
+        {% if feedback %}
+        <div class="feedback feedback-{{ feedback.type }}">
+            {{ feedback.message }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.admin-section {
+    margin: 2rem 0;
+    padding: 32px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+
+.section-title {
+    margin: 0 0 24px 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.user-list-container {
+    margin-bottom: 32px;
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-table th {
+    background-color: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.admin-table td {
+    color: var(--text-secondary);
+    background-color: var(--bg-secondary);
+}
+
+.admin-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.admin-table tbody tr:hover td {
+    background-color: var(--bg-tertiary);
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.role-admin {
+    background-color: rgba(69, 183, 209, 0.2);
+    color: var(--accent-color);
+    border: 1px solid rgba(69, 183, 209, 0.4);
+}
+
+.role-reader {
+    background-color: rgba(78, 205, 196, 0.2);
+    color: var(--secondary-color);
+    border: 1px solid rgba(78, 205, 196, 0.4);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-warning {
+    background-color: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+    border: 1px solid rgba(255, 152, 0, 0.4);
+}
+
+.btn-warning:hover {
+    background-color: #ff9800;
+    color: var(--bg-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.btn-danger {
+    background-color: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+.btn-danger:hover {
+    background-color: #e74c3c;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.admin-form-section {
+    margin-top: 32px;
+    padding: 24px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+}
+
+.admin-form-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select {
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(69, 183, 209, 0.2);
+    outline: none;
+}
+
+.form-group select {
+    appearance: none;
+    cursor: pointer;
+}
+
+.feedback {
+    margin-top: 20px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    border: 1px solid;
+}
+
+.feedback-success {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border-color: rgba(46, 204, 113, 0.4);
+}
+
+.feedback-error {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border-color: rgba(231, 76, 60, 0.4);
+}
+
+.hero p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .admin-section {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .admin-table {
+        font-size: 0.9rem;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 12px 8px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .btn-sm {
+        width: 100%;
+    }
+
+    .admin-form-section {
+        padding: 20px;
+    }
+}
+</style>
+{% endblock %}
+

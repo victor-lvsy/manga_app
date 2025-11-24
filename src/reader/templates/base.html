@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{% block title %}Manga Viewer{% endblock %}</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/base.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/nav.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/hero.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/chapters.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/manga-list.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/footer.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/links.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/components.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="{{ request.url_for('acceuil') }}" class="nav-logo-link">
+                    <h2>VScans</h2>
+                </a>
+            </div>
+
+            <!-- Hamburger Menu Button -->
+            <button class="hamburger" id="hamburger" aria-label="Menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+
+            <ul class="nav-menu" id="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ request.url_for('acceuil') }}" class="nav-link {% if request.url.path == '/' %}active{% endif %}">Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ request.url_for('library') }}" class="nav-link {% if request.url.path.startswith('/library') %}active{% endif %}">Bibliothèque</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ request.url_for('add_manga') }}" class="nav-link {% if request.url.path.startswith('/add') %}active{% endif %}">Nouveau</a>
+                </li>
+                {% set current_user = get_current_user_from_request(request) %}
+                {% if current_user and current_user.role.value == 'admin' %}
+                <li class="nav-item">
+                    <a href="{{ request.url_for('admin_page') }}" class="nav-link {% if request.url.path.startswith('/admin') %}active{% endif %}">Administration</a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a href="{{ request.url_for('logout') }}" class="nav-link">Déconnexion</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <main class="main-content">
+        {% block body %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">VScans</h3>
+                    <p class="footer-description">Lecture de mangas en ligne</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    <p>&copy; 2025 VScans. Tous droits réservés.</p>
+                </div>
+                <div class="footer-legal">
+                    <a href="#" class="footer-link">Mentions légales</a>
+                    <a href="#" class="footer-link">Politique de confidentialité</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Modules -->
+    <script src="{{ request.url_for('static', path='js/config.js') }}"></script>
+    <script src="{{ request.url_for('static', path='js/utils.js') }}"></script>
+    <script src="{{ request.url_for('static', path='js/navigation.js') }}"></script>
+    <script src="{{ request.url_for('static', path='js/images.js') }}"></script>
+    <script src="{{ request.url_for('static', path='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

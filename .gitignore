@@ -1,0 +1,8 @@
+.env
+kotlin_inspiration/
+.venv/
+__pycache__/
+.flake8
+.pylintrc
+Pipfile.lock
+Pipfile

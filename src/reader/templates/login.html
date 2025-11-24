@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion - Manga Viewer{% endblock %}
+
+{% block body %}
+<div class="login-container">
+    <div class="login-card">
+        <h1>Connexion</h1>
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+        <form method="post" action="{{ request.url_for('login') }}" class="login-form">
+            <div class="form-field">
+                <span>Nom d'utilisateur</span>
+                <input type="text" name="username" required autofocus>
+            </div>
+            <div class="form-field">
+                <span>Mot de passe</span>
+                <input type="password" name="password" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Se connecter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 200px);
+    padding: 2rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 32px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+}
+
+.login-card h1 {
+    margin: 0 0 24px;
+    font-size: 1.75rem;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.login-form .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.login-form .form-field span {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.login-form .form-field input {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-form .form-field input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(93, 118, 255, 0.2);
+    outline: none;
+}
+
+.login-form .form-actions {
+    margin-top: 8px;
+}
+
+.login-form .btn {
+    width: 100%;
+}
+</style>
+{% endblock %}
+

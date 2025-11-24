@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}{{ manga.name if manga else "Manga" }} - MangaReader{% endblock %}
+{% block body %}
+<div class="hero-section">
+    <div class="hero-content">
+        <!-- Desktop Layout -->
+        <div class="manga-preview desktop-only">
+            <div class="manga-cover">
+                <img src="{{ request.url_for('serve_cover', manga_id=manga.id) }}"
+                     alt="{{ manga.name if manga else 'Manga' }} - Couverture"
+                     class="cover-image"
+                     onerror="this.src='https://via.placeholder.com/300x400/2c3e50/ecf0f1?text={{ manga.name|replace(' ', '+') if manga else 'Manga' }}'">
+            </div>
+        </div>
+        <div class="manga-info">
+            <h1 class="manga-title">{{ manga.name if manga else "Manga" }}</h1>
+            <div class="manga-stats">
+                <span class="chapter-count">{{ chapters|length if chapters else 0 }} chapitres</span>
+                <form method="post" action="{{ request.url_for('toggle_follow_manga', manga_id=manga.id) }}" style="display: inline;">
+                    <button type="submit" class="follow-link {{ 'followed' if is_following else '' }}">
+                        {% if is_following %}
+                            ✓ Suivi
+                        {% else %}
+                            + Suivre
+                        {% endif %}
+                    </button>
+                </form>
+                <span class="manga-status">{{ manga.last_updated }}</span>
+            </div>
+            <p class="manga-description">
+                {% if manga %}
+                    {{ manga.name }}
+                    {% if manga.url %}
+                    <br><small>Source: <a href="{{ manga.url }}" target="_blank" class="source-link">{{ manga.scanlation_group }}</a></small>
+                    {% endif %}
+                {% else %}
+                    Aucun manga sélectionné.
+                {% endif %}
+            </p>
+            <div class="action-buttons">
+                <a href="/" class="btn btn-secondary">← Retour à la liste</a>
+                {% if chapters %}
+                <a href="{{ request.url_for('view_chapter', manga_id=manga.id, chapter_number=chapters[0]) }}" class="btn btn-primary">Commencer la lecture</a>
+                {% endif %}
+                <form method="post" action="{{ request.url_for('force_update_manga', manga_id=manga.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary" data-force-update data-manga-id="{{ manga.id }}">🔄 Force Update</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mobile Layout -->
+        <div class="mobile-layout mobile-only">
+            <h1 class="mobile-manga-title">{{ manga.name if manga else "Manga" }}</h1>
+            <div class="mobile-manga-stats">
+                <span class="mobile-chapter-count">{{ chapters|length if chapters else 0 }} chapitres</span>
+                <form method="post" action="{{ request.url_for('toggle_follow_manga', manga_id=manga.id) }}" style="display: inline;">
+                    <button type="submit" class="mobile-follow-link {{ 'followed' if is_following else '' }}">
+                        {% if is_following %}
+                            ✓ Suivi
+                        {% else %}
+                            + Suivre
+                        {% endif %}
+                    </button>
+                </form>
+                <span class="mobile-manga-status">{{ manga.last_updated }}</span>
+            </div>
+            <div class="mobile-manga-cover">
+                <img src="{{ request.url_for('serve_cover', manga_id=manga.id) }}"
+                     alt="{{ manga.name if manga else 'Manga' }} - Couverture"
+                     class="mobile-cover-image"
+                     onerror="this.src='https://via.placeholder.com/250x350/2c3e50/ecf0f1?text={{ manga.name|replace(' ', '+') if manga else 'Manga' }}'">
+            </div>
+            <p class="mobile-manga-description">
+                {% if manga %}
+                    {{ manga.name }}
+                    {% if manga.url %}
+                    <br><small>Source: <a href="{{ manga.url }}" target="_blank" class="source-link">{{ manga.scanlation_group }}</a></small>
+                    {% endif %}
+                {% else %}
+                    Aucun manga sélectionné.
+                {% endif %}
+            </p>
+            <div class="mobile-action-buttons">
+                <a href="/" class="btn btn-secondary">← Retour à la liste</a>
+                {% if chapters %}
+                <a href="{{ request.url_for('view_chapter', manga_id=manga.id, chapter_number=chapters[0]) }}" class="btn btn-primary">Commencer la lecture</a>
+                {% endif %}
+                <form method="post" action="{{ request.url_for('force_update_manga', manga_id=manga.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary" data-force-update data-manga-id="{{ manga.id }}">🔄 Force Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if feedback %}
+    <div class="alert {{ 'alert-success' if feedback.type == 'success' else 'alert-error' }}">
+        {{ feedback.message }}
+    </div>
+    {% endif %}
+    <div class="chapters-section">
+        <h2>Chapitres disponibles</h2>
+        {% if chapters %}
+        <ul class="chapter-list">
+            {% for ch in chapters|reverse %}
+            <li class="chapter-item">
+                <a href="{{ request.url_for('view_chapter', manga_id=manga.id, chapter_number=ch) }}" class="chapter-link">
+                    <span class="chapter-number">Chapitre {{ ch }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="no-chapters">
+            <p>Aucun chapitre trouvé.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ request.url_for('static', path='js/manga-update.js') }}"></script>
+{% endblock %}

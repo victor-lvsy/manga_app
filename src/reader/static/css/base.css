@@ -1,0 +1,86 @@
+/* ========================================================================== */
+/* Base (tokens, resets, shared primitives)                                   */
+/* Load order: 1 (must be first)                                              */
+/* Provides CSS variables, element resets, base buttons, visibility helpers.   */
+/* ========================================================================== */
+/* Base Theme Tokens and Resets */
+:root {
+    color-scheme: dark;
+    --primary-color: #ff6b6b;
+    --secondary-color: #4ecdc4;
+    --accent-color: #45b7d1;
+    --bg-primary: #0f1012;
+    --bg-secondary: #1a1b1e;
+    --bg-tertiary: #2c2d30;
+    --text-primary: #e6e6e6;
+    --text-secondary: #b0b0b0;
+    --border-color: #333;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    /* Prevent horizontal scrolling on mobile */
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+body {
+    margin: 0;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    /* Prevent horizontal scrolling on mobile */
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+/* Shared Buttons */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #ff5252;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-color);
+}
+
+/* Visibility helpers */
+.desktop-only { display: block; }
+.mobile-only { display: none; }

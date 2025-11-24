@@ -1,0 +1,8 @@
+/* ========================================================================== */
+/* Links (inline anchors)                                                      */
+/* Load order: 8 (before components.css)                                       */
+/* Inline link colors and hover accents.                                       */
+/* ========================================================================== */
+/* Inline Links */
+.source-link { color: var(--accent-color); text-decoration: none; font-weight: 500; }
+.source-link:hover { color: var(--primary-color); text-decoration: underline; }
