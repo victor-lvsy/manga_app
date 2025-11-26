@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from src.logger import Logger
+from src.reader.context_manager import get_context_manager
 
 from src.reader.dependencies import get_current_user, get_comic_repository
 from src.db import User, ComicRepository
@@ -19,6 +20,8 @@ SCRAPER_FACTORIES: dict[ScanlationGroup, type[BaseScraper]] = {
     ScanlationGroup.ASURA_SCANS: AsuraScansScraper,
     ScanlationGroup.MANGA_FIRE: MangaFireToScraper,
 }
+
+context_manager = get_context_manager()
 
 
 def add_manga_context(request: Request, feedback: dict | None = None, tag_feedback: dict | None = None):

@@ -1,6 +1,6 @@
 """Main FastAPI application"""
 import os
-
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +11,7 @@ from starlette.responses import RedirectResponse
 
 from src.logger import Logger
 from src.reader.routers import auth, library, manga, chapter, add_manga, admin, images
+from src.reader.context_manager import get_context_manager
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -40,8 +41,14 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         return await call_next(request)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan for the application"""
+    yield
+    get_context_manager().cleanup()
 
-app = FastAPI(title="Manga Viewer")
+app = FastAPI(title="Manga Viewer", lifespan=lifespan)
+
 
 # Add authentication middleware first (innermost - runs after session is set up)
 app.add_middleware(AuthMiddleware)

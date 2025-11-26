@@ -43,7 +43,14 @@
                 <a href="{{ request.url_for('view_chapter', manga_id=manga.id, chapter_number=chapters[0]) }}" class="btn btn-primary">Commencer la lecture</a>
                 {% endif %}
                 <form method="post" action="{{ request.url_for('force_update_manga', manga_id=manga.id) }}" style="display: inline;">
-                    <button type="submit" class="btn btn-secondary" data-force-update data-manga-id="{{ manga.id }}">🔄 Force Update</button>
+                    <button type="submit" class="btn btn-secondary {% if manga.update_status == 'Pending' %}updating{% endif %}" data-force-update data-manga-id="{{ manga.id }}" {% if manga.update_status == 'Pending' %}disabled{% endif %}>
+                        {% if manga.update_status == 'Pending' %}
+                            <span class="loading-spinner"></span>
+                            <span class="loading-text">Mise à jour...</span>
+                        {% else %}
+                            🔄 Force Update
+                        {% endif %}
+                    </button>
                 </form>
             </div>
         </div>
@@ -86,7 +93,14 @@
                 <a href="{{ request.url_for('view_chapter', manga_id=manga.id, chapter_number=chapters[0]) }}" class="btn btn-primary">Commencer la lecture</a>
                 {% endif %}
                 <form method="post" action="{{ request.url_for('force_update_manga', manga_id=manga.id) }}" style="display: inline;">
-                    <button type="submit" class="btn btn-secondary" data-force-update data-manga-id="{{ manga.id }}">🔄 Force Update</button>
+                    <button type="submit" class="btn btn-secondary {% if manga.update_status == 'Pending' %}updating{% endif %}" data-force-update data-manga-id="{{ manga.id }}" {% if manga.update_status == 'Pending' %}disabled{% endif %}>
+                        {% if manga.update_status == 'Pending' %}
+                            <span class="loading-spinner"></span>
+                            <span class="loading-text">Mise à jour...</span>
+                        {% else %}
+                            🔄 Force Update
+                        {% endif %}
+                    </button>
                 </form>
             </div>
         </div>

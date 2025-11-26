@@ -194,6 +194,26 @@
     }
 }
 
+/* Alert Styles */
+.alert {
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.alert-success {
+    background: rgba(46, 204, 113, 0.15);
+    border: 1px solid rgba(46, 204, 113, 0.4);
+    color: #2ecc71;
+}
+
+.alert-error {
+    background: rgba(231, 76, 60, 0.15);
+    border: 1px solid rgba(231, 76, 60, 0.4);
+    color: #e74c3c;
+}
+
 /* Fade In Animation */
 .fade-in {
     opacity: 0;

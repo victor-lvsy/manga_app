@@ -60,33 +60,9 @@ class MangaFireToScraper(BaseScraper):
         """TODO"""
         response = self._get_from_url(comic.url)
         soup = bs4.BeautifulSoup(response.content, "html.parser")
-        if (
-            not os.path.exists(
-                os.path.join(LOCAL_FOLDER, comic.local_path, "cover.webp")
-            )
-            and not os.path.exists(
-                os.path.join(LOCAL_FOLDER, comic.local_path, "cover.jpg")
-            )
-            and not os.path.exists(
-                os.path.join(LOCAL_FOLDER, comic.local_path, "cover.jpeg")
-            )
-            and not os.path.exists(
-                os.path.join(LOCAL_FOLDER, comic.local_path, "cover.png")
-            )
-        ):
+        if not self.check_if_comic_cover_exists(comic):
             cover_content, cover_url = self.get_comic_cover(soup)
-            if cover_url.endswith(".webp"):
-                with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.webp"), "wb") as f:
-                    f.write(cover_content)
-            elif cover_url.endswith(".jpg"):
-                with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.jpg"), "wb") as f:
-                    f.write(cover_content)
-            elif cover_url.endswith(".jpeg"):
-                with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.jpeg"), "wb") as f:
-                    f.write(cover_content)
-            elif cover_url.endswith(".png"):
-                with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.png"), "wb") as f:
-                    f.write(cover_content)
+            self.save_comic_cover(comic, cover_content, cover_url)
 
         chapters = self.get_chapter_links(soup)
         count = 0

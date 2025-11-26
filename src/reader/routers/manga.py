@@ -1,10 +1,10 @@
 """Manga-related routes"""
-import os
+import asyncio
 from pathlib import Path
 from fastapi import APIRouter, Request, Depends, Query, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, JSONResponse
 from src.logger import Logger
-
+from src.reader.context_manager import get_context_manager
 from src.reader.dependencies import (
     get_current_user,
     get_comic_repository,
@@ -17,6 +17,8 @@ from src.config import LOCAL_FOLDER
 
 logger = Logger("manga_router")
 router = APIRouter()
+
+context_manager = get_context_manager()
 
 
 def list_chapters(comic, comic_repo: ComicRepository):
@@ -34,7 +36,6 @@ async def manga_detail(
     current_user: User = Depends(get_current_user),
     comic_repo: ComicRepository = Depends(get_comic_repository),
     user_repo: UserRepository = Depends(get_user_repository),
-    chapters_found: int | None = Query(None, alias="chapters_found"),
 ):
     """Affiche les détails d'un manga spécifique"""
     comic = comic_repo.get_comic(int(manga_id))
@@ -44,22 +45,13 @@ async def manga_detail(
     chapters = list_chapters(comic, comic_repo)
     is_following = user_repo.is_following_comic(current_user.id, comic.id)
 
-    feedback = None
-    if chapters_found is not None:
-        if chapters_found == -1:
-            feedback = {"type": "error", "message": "Erreur lors de la mise à jour. Veuillez réessayer."}
-        elif chapters_found > 0:
-            feedback = {"type": "success", "message": f"Mise à jour réussie ! {chapters_found} nouveau(x) chapitre(s) trouvé(s)."}
-        else:
-            feedback = {"type": "success", "message": "Mise à jour effectuée. Aucun nouveau chapitre trouvé."}
-
     return templates.TemplateResponse("manga_index.html", {
         "request": request,
         "manga": comic.model_dump(),
         "chapters": chapters,
         "manga_root": str(Path(comic.local_path)),
         "is_following": is_following,
-        "feedback": feedback,
+        "feedback": None,
     })
 
 
@@ -107,19 +99,18 @@ async def force_update_manga(
 
     try:
         manga_updater = MangaUpdater(comic_repo)
-        _, count = await manga_updater.force_update(comic)
+        context_manager.add_task(asyncio.create_task(manga_updater.force_update(comic)))
 
         if is_ajax:
             return JSONResponse(
                 content={
                     "success": True,
-                    "chapters_found": count,
-                    "message": f"{count} nouveau(x) chapitre(s) trouvé(s)." if count > 0 else "Aucun nouveau chapitre trouvé."
+                    "message": "Mise à jour lancée."
                 }
             )
         else:
             return RedirectResponse(
-                url=str(request.url_for("manga_detail", manga_id=manga_id)) + f"?chapters_found={count}",
+                url=str(request.url_for("manga_detail", manga_id=manga_id)),
                 status_code=303,
             )
     except Exception as exc:  # pylint: disable=broad-except
@@ -129,15 +120,33 @@ async def force_update_manga(
                 status_code=500,
                 content={
                     "success": False,
-                    "chapters_found": -1,
                     "message": "Erreur lors de la mise à jour. Veuillez réessayer."
                 }
             )
         else:
             return RedirectResponse(
-                url=str(request.url_for("manga_detail", manga_id=manga_id)) + "?chapters_found=-1",
+                url=str(request.url_for("manga_detail", manga_id=manga_id)),
                 status_code=303,
             )
+
+
+@router.get("/manga/{manga_id}/status", response_class=JSONResponse)
+async def get_manga_status(
+    manga_id: str,
+    current_user: User = Depends(get_current_user),
+    comic_repo: ComicRepository = Depends(get_comic_repository),
+):
+    """Returns the update status of a manga"""
+    comic = comic_repo.get_comic(int(manga_id))
+    if not comic:
+        raise HTTPException(status_code=404, detail="Manga not found")
+
+    return JSONResponse(
+        content={
+            "update_status": comic.update_status.value,
+            "last_updated": comic.last_updated.strftime("%d/%m/%y, %H:%M")
+        }
+    )
 
 
 @router.get("/manga/{manga_id}/cover", response_class=FileResponse)

@@ -13,7 +13,7 @@ class DatabaseAccessLayer:
 
     def __init__(self):
         """Initialize the database connection with environment variables."""
-        logger.info("Initializing database connection")
+        logger.debug("Initializing database connection")
         self.username = "root"
         self.password = "pwd"
         self.host = "localhost"

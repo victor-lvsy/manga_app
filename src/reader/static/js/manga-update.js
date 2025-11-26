@@ -6,6 +6,7 @@
 class MangaUpdate {
     constructor() {
         this.isUpdating = false;
+        this.pollingInterval = null;
         this.init();
     }
 
@@ -21,6 +22,62 @@ class MangaUpdate {
         updateForms.forEach(form => {
             form.addEventListener('submit', (e) => this.handleFormSubmit(e, form));
         });
+
+        // Check if update is pending and start polling
+        this.checkPendingStatus();
+    }
+
+    checkPendingStatus() {
+        // Check if any button has the 'updating' class (indicating pending status)
+        const updateButtons = document.querySelectorAll('[data-force-update]');
+        const pendingButton = Array.from(updateButtons).find(btn => btn.classList.contains('updating'));
+
+        if (pendingButton) {
+            const mangaId = pendingButton.dataset.mangaId || this.extractMangaIdFromForm(pendingButton.closest('form'));
+            if (mangaId) {
+                this.startPolling(mangaId);
+            }
+        }
+    }
+
+    startPolling(mangaId) {
+        // Poll every 3 seconds
+        this.pollingInterval = setInterval(async () => {
+            try {
+                const response = await fetch(`/manga/${mangaId}/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to fetch manga status');
+                    return;
+                }
+
+                const data = await response.json();
+
+                // If status is no longer pending, stop polling and reload
+                if (data.update_status !== 'pending') {
+                    this.stopPolling();
+                    // Reload page to show updated status and chapters
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error checking manga status:', error);
+                // Continue polling even on error
+            }
+        }, 3000);
+    }
+
+    stopPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+        }
     }
 
     handleFormSubmit(e, form) {
@@ -65,11 +122,8 @@ class MangaUpdate {
             const data = await response.json();
 
             if (data.success) {
-                this.showSuccess(data.message, data.chapters_found);
-                // Reload page after a short delay to show updated chapters
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
+                // Update is now asynchronous, so start polling for status
+                this.startPolling(mangaId);
             } else {
                 this.showError(data.message);
                 this.hideLoading(button);
@@ -121,24 +175,6 @@ class MangaUpdate {
         button.classList.remove('disabled');
     }
 
-    showSuccess(message, chaptersFound) {
-        // Remove existing feedback
-        this.removeExistingFeedback();
-
-        // Create success message
-        const feedback = document.createElement('div');
-        feedback.className = 'alert alert-success update-feedback';
-        feedback.innerHTML = `
-            <strong>✓ ${message}</strong>
-            ${chaptersFound > 0 ? `<br><small>Rechargement de la page...</small>` : ''}
-        `;
-
-        // Insert at the top of container
-        const container = document.querySelector('.container');
-        if (container) {
-            container.insertBefore(feedback, container.firstChild);
-        }
-    }
 
     showError(message) {
         // Remove existing feedback
@@ -165,13 +201,23 @@ class MangaUpdate {
 }
 
 // Initialize when DOM is ready
+let mangaUpdateInstance = null;
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        window.mangaUpdate = new MangaUpdate();
+        mangaUpdateInstance = new MangaUpdate();
+        window.mangaUpdate = mangaUpdateInstance;
     });
 } else {
-    window.mangaUpdate = new MangaUpdate();
+    mangaUpdateInstance = new MangaUpdate();
+    window.mangaUpdate = mangaUpdateInstance;
 }
+
+// Clean up polling when page is unloaded
+window.addEventListener('beforeunload', () => {
+    if (mangaUpdateInstance) {
+        mangaUpdateInstance.stopPolling();
+    }
+});
 
 // Export for use in other modules
 window.MangaUpdate = MangaUpdate;

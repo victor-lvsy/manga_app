@@ -37,6 +37,12 @@ class UpdateFrequency(str, Enum):
     MONTHLY = "monthly"
 
 
+class UpdateStatus(str, Enum):
+    """TODO"""
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+
 class Page(SQLModel, table=True):
     """TODO"""
     __tablename__ = "Page"
@@ -72,6 +78,7 @@ class Comic(SQLModel, table=True):
     url: str
     local_path: str
     last_updated: datetime
+    update_status: UpdateStatus = Field(default=UpdateStatus.SUCCESS)
     scanlation_group: ScanlationGroup
     comic_type: ComicType
     status: Status = Field(default=Status.ONGOING)
@@ -85,6 +92,7 @@ class Comic(SQLModel, table=True):
     def model_dump(self, *args, **kwargs):
         """TODO"""
         data = super().model_dump(*args, **kwargs)
+        data["update_status"] = self.update_status.value.replace("_", " ").title()
         data["last_updated"] = self.last_updated.strftime("%d/%m/%y, %H:%M")
         data["scanlation_group"] = self.scanlation_group.value.replace("_", " ").title()
         data["comic_type"] = self.comic_type.value.replace("_", " ").title()

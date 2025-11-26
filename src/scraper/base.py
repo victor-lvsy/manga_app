@@ -4,6 +4,7 @@ import uuid
 import ssl
 from typing import Tuple
 from datetime import datetime
+import bs4
 
 from src.logger import Logger
 import requests
@@ -119,7 +120,6 @@ class BaseScraper:
 
         for ssl_option in ssl_options:
             try:
-                logger.debug(f"Trying SSL option: {ssl_option['description']}")  # pylint: disable=logging-fstring-interpolation
                 response = self._session.get(
                     url=url,
                     params=params,
@@ -132,7 +132,6 @@ class BaseScraper:
                 if raise_for_status:
                     response.raise_for_status()
 
-                logger.debug(f"Success with SSL option: {ssl_option['description']}")  # pylint: disable=logging-fstring-interpolation
                 return response
 
             except requests.exceptions.SSLError as e:
@@ -246,3 +245,23 @@ class BaseScraper:
     async def refresh_comic(self, comic: Comic):
         """TODO"""
         raise NotImplementedError("Subclasses must implement refresh_comic")
+
+    def get_comic_cover(self, soup: bs4.BeautifulSoup):
+        """TODO"""
+        raise NotImplementedError("Subclasses must implement get_comic_cover")
+
+    def check_if_comic_cover_exists(self, comic: Comic) -> bool:
+        """TODO"""
+        return any(os.path.exists(os.path.join(LOCAL_FOLDER, comic.local_path, f"cover.{ext}")) for ext in ["webp", "jpg", "jpeg", "png"])
+
+    def save_comic_cover(self, comic: Comic, cover_content: bytes, cover_url: str):
+        """TODO"""
+        if cover_url.endswith(".webp"):
+            with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.webp"), "wb") as f:
+                f.write(cover_content)
+        elif cover_url.endswith(".jpg"):
+            with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.jpg"), "wb") as f:
+                f.write(cover_content)
+        elif cover_url.endswith(".jpeg"):
+            with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.jpeg"), "wb") as f:
+                f.write(cover_content)

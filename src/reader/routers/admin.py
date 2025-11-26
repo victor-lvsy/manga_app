@@ -1,9 +1,10 @@
 """Admin routes"""
+import asyncio
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse
 from sqlmodel import select
 
-from src.logger import Logger
+from src.reader.context_manager import get_context_manager
 from src.reader.dependencies import (
     get_admin_user,
     get_user_repository,
@@ -27,11 +28,16 @@ async def admin_page(
 ):
     """Display admin page with user management"""
     users = user_repo.session.exec(select(User)).all()
+    context_manager = get_context_manager()
+    # Pass the server start timestamp for real-time client-side updates
+    server_start_timestamp = context_manager.start_time
+
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "users": users,
         "current_user": current_user,
         "update_feedback": update_feedback,
+        "server_start_timestamp": server_start_timestamp,
     })
 
 
@@ -217,11 +223,7 @@ async def admin_update_all_mangas(
     """Search for new chapters for all mangas (admin only)"""
     try:
         manga_updater = MangaUpdater(comic_repo)
-        updated_comics = await manga_updater.force_global_update()
-
-        total_chapters = sum(count for _, count in updated_comics)
-        total_mangas = len(updated_comics)
-        mangas_with_chapters = sum(1 for _, count in updated_comics if count > 0)
+        get_context_manager().add_task(asyncio.create_task(manga_updater.force_global_update()))
 
         users = user_repo.session.exec(select(User)).all()
         return templates.TemplateResponse("admin.html", {
@@ -230,7 +232,7 @@ async def admin_update_all_mangas(
             "current_user": current_user,
             "update_feedback": {
                 "type": "success",
-                "message": f"Mise à jour terminée ! {total_chapters} nouveau(x) chapitre(s) trouvé(s) dans {mangas_with_chapters} manga(s) sur {total_mangas}."
+                "message": f"Mise à jour lancée !"
             },
         })
     except Exception as exc:  # pylint: disable=broad-except

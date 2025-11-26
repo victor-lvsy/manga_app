@@ -292,18 +292,6 @@ class VRFGenerator:
                 # This allows the site to set cookies and perform bot checks
                 logger.debug("Establishing session by visiting base URL first (allowing all resources)")
 
-                # Temporarily set up permissive routing for base URL visit
-                async def permissive_route(route: Route):
-                    """Allow all resources during initial base URL visit"""
-                    url = route.request.url
-                    # Only block images to speed things up
-                    if any(url.lower().endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico']):
-                        await route.abort()
-                    else:
-                        await route.continue_()
-
-                await self.page.route("**/*", permissive_route)
-
                 try:
                     response = await self.page.goto(self.base_url, wait_until="domcontentloaded", timeout=30000)
                     if response and response.status >= 400:
@@ -336,7 +324,6 @@ class VRFGenerator:
                     await asyncio.sleep(random.uniform(1.0, 2.0))
 
                 # Now set up strict request interception for chapter AJAX requests
-                await self.page.unroute("**/*")  # Remove permissive routing
                 await self._setup_request_interception("ajax/read", capture_only=False, target_url=chapter_url)
 
                 # Load chapter page with timeout and retry logic

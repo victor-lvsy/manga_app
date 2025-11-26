@@ -5,8 +5,9 @@ from datetime import datetime
 from src.scraper.asura_scans import AsuraScansScraper
 from src.scraper.mangafire_to import MangaFireToScraper
 from src.logger import Logger
+from src.reader.context_manager import get_context_manager
 
-from .comic_schema import UpdateFrequency, ScanlationGroup, Comic, Status
+from .comic_schema import UpdateFrequency, ScanlationGroup, Comic, Status, UpdateStatus
 from .comic import ComicRepository
 
 logger = Logger("manga_updater")
@@ -31,60 +32,41 @@ class MangaUpdater:
 
     async def search_for_updates(self):
         """TODO"""
-        updated_comics = []
         for comic in self.comic_repository.get_comics():
             if comic.status == Status.ONGOING:
                 days_since_last_update = (datetime.now() - comic.last_updated).days
                 if days_since_last_update >= to_number_of_days(comic.update_frequency):
-                    if comic.scanlation_group == ScanlationGroup.ASURA_SCANS:
-                        name, count = await AsuraScansScraper().refresh_comic(comic)
-                    elif comic.scanlation_group == ScanlationGroup.MANGA_FIRE:
-                        with MangaFireToScraper() as scraper:
-                            while True:
-                                try:
-                                    name, count = await scraper.refresh_comic(comic)
-                                except Exception as e:
-                                    if "Unable to capture AJAX request for chapter URL" in str(e):
-                                        continue
-                                    else:
-                                        raise e
-                                break
-                        updated_comics.append((name, count))
-                    if days_since_last_update - to_number_of_days(comic.update_frequency) > 14 and count == 0:
+                    get_context_manager().add_task(asyncio.create_task(self.force_update(comic)))
+                    if days_since_last_update - to_number_of_days(comic.update_frequency) > 14:
                         self.comic_repository.update_comic_status(comic.id, Status.HIATUS)
-        logger.info(f"Update ended, {len(updated_comics)} comics updated")  # pylint: disable=logging-fstring-interpolation
-        for name, count in updated_comics:
-            logger.info(f"{name} - {count} new chapters found")  # pylint: disable=logging-fstring-interpolation
-        return updated_comics
 
     async def force_update(self, comic: Comic):
         """TODO"""
-        if comic.scanlation_group == ScanlationGroup.ASURA_SCANS:
-            name, count = await AsuraScansScraper().refresh_comic(comic)
-        elif comic.scanlation_group == ScanlationGroup.MANGA_FIRE:
-            with MangaFireToScraper() as scraper:
-                while True:
-                    try:
-                        name, count = await scraper.refresh_comic(comic)
-                    except Exception as e:
-                        if "Unable to capture AJAX request for chapter URL" in str(e):
-                            continue
-                        else:
-                            raise e
-                    break
-        else:
-            raise ValueError(f"Invalid scanlation group: {comic.scanlation_group}")
+        try:
+            logger.info(f"Updating {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            if comic.update_status == UpdateStatus.PENDING:
+                logger.info(f"Comic {comic.name} is already being updated")  # pylint: disable=logging-fstring-interpolation
+                return
+            self.comic_repository.update_comic_update_status(comic.id, UpdateStatus.PENDING)
+            if comic.scanlation_group == ScanlationGroup.ASURA_SCANS:
+                name, count = await AsuraScansScraper().refresh_comic(comic)
+            elif comic.scanlation_group == ScanlationGroup.MANGA_FIRE:
+                name, count = await MangaFireToScraper().refresh_comic(comic)
+            else:
+                raise ValueError(f"Invalid scanlation group: {comic.scanlation_group}")
 
-        if count > 0 and comic.status != Status.ONGOING:
-            self.comic_repository.update_comic_status(comic.id, Status.ONGOING)
-        return name, count
+            if count > 0 and comic.status != Status.ONGOING:
+                self.comic_repository.update_comic_status(comic.id, Status.ONGOING)
+            self.comic_repository.update_comic_update_status(comic.id, UpdateStatus.SUCCESS)
+            return name, count
+        except Exception as e:
+            self.comic_repository.update_comic_update_status(comic.id, UpdateStatus.FAILED)
+            raise e
 
     async def force_global_update(self):
         """TODO"""
-        updated_comics = []
         for comic in self.comic_repository.get_comics():
-            updated_comics.append(await self.force_update(comic))
-        return updated_comics
+            get_context_manager().add_task(asyncio.create_task(self.force_update(comic)))
 
 
 if __name__ == "__main__":

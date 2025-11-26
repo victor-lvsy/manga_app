@@ -13,7 +13,24 @@
         logger.dev("This is a developer level message.")
 """
 import logging
+import asyncio
 
+
+class TaskNameFilter(logging.Filter):
+    """
+    Filter to add the name of the current task to the logging record.
+    """
+    def filter(self, record):
+        try:
+            task = asyncio.current_task()
+            if task:
+                record.task_name = task.get_name()
+            else:
+                record.task_name = "Main"
+        except RuntimeError:
+            # No running event loop → synchronous context
+            record.task_name = "Main"
+        return True
 
 
 class CustomFormatter(logging.Formatter):
@@ -30,20 +47,21 @@ class CustomFormatter(logging.Formatter):
     bold_blue = "\x1b[34;1m"
     reset = "\x1b[0m"
     green = "\x1b[32;20m"
+    bold_white = "\x1b[37;1m"
 
-    fmt = "{asctime} - {levelname}:{name}[{thread_id}] - {message} ({filename}:{lineno})"
+    fmt = "{asctime} - {levelname}:{name}[{task_name}] - {message} ({filename}:{lineno})"
     style = "{"
     FORMATS = {
-        logging.DEBUG: green + "{asctime} " + reset + blue + "{name}[{thread_id}] " + reset + bold_blue + "{levelname} " + reset +  "{message}",
-        logging.INFO: green + "{asctime} " + reset + blue + "{name}[{thread_id}] " + reset + bold_grey + "{levelname} " + reset +  "{message}",
-        logging.WARNING: green + "{asctime} " + reset + blue + "{name}[{thread_id}] " + reset + bold_yellow + "{levelname} " + reset +  "{message}",
-        logging.ERROR: green + "{asctime} " + reset + blue + "{name}[{thread_id}] " + reset + bold_red + "{levelname} " + reset +  "{message}",
-        logging.CRITICAL: green + "{asctime} " + reset + blue + "{name}[{thread_id}] " + reset + bold_red + "{levelname} " + reset +  "{message}"
+        logging.DEBUG: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_blue + "{levelname} " + reset +  "{message}",
+        logging.INFO: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_white + "{levelname} " + reset +  "{message}",
+        logging.WARNING: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_yellow + "{levelname} " + reset +  "{message}",
+        logging.ERROR: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_red + "{levelname} " + reset +  "{message}",
+        logging.CRITICAL: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_red + "{levelname} " + reset +  "{message}"
     }
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt, style=self.style)
+        formatter = logging.Formatter(log_fmt, style=self.style, datefmt="%d/%m/%y %H:%M:%S")
         return formatter.format(record)
 
 
@@ -61,7 +79,7 @@ class Logger:
     :type level: int
     """
     def __init__(self, name, level=logging.DEBUG):
-
+        print(f"init logger {name}")
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
         fmt = CustomFormatter()
@@ -69,57 +87,58 @@ class Logger:
         handler.setFormatter(fmt)
         self.logger.addHandler(handler)
         self.logger.propagate = False
+        self.logger.addFilter(TaskNameFilter())
 
-    def debug(self, msg, thread_id=None):
+    def debug(self, msg, task_name=None):
         """
         Log a message at the DEBUG level.
 
         :param msg: The message to log.
         :type msg: str
         """
-        self.logger.debug(msg, extra={"thread_id": thread_id})
+        self.logger.debug(msg, extra={"task_name": task_name})
 
-    def info(self, msg, thread_id=None):
+    def info(self, msg, task_name=None):
         """
         Log a message at the INFO level.
 
         :param msg: The message to log.
         :type msg: str
         """
-        self.logger.info(msg, extra={"thread_id": thread_id})
+        self.logger.info(msg, extra={"task_name": task_name})
 
-    def warning(self, msg, thread_id=None):
+    def warning(self, msg, task_name=None):
         """
         Log a message at the WARNING level.
 
         :param msg: The message to log.
         :type msg: str
         """
-        self.logger.warning(msg, extra={"thread_id": thread_id})
+        self.logger.warning(msg, extra={"task_name": task_name})
 
-    def error(self, msg, thread_id=None):
+    def error(self, msg, task_name=None):
         """
         Log a message at the ERROR level.
 
         :param msg: The message to log.
         :type msg: str
         """
-        self.logger.error(msg, extra={"thread_id": thread_id})
+        self.logger.error(msg, extra={"task_name": task_name})
 
-    def critical(self, msg, thread_id=None):
+    def critical(self, msg, task_name=None):
         """
         Log a message at the CRITICAL level.
 
         :param msg: The message to log.
         :type msg: str
         """
-        self.logger.critical(msg, extra={"thread_id": thread_id})
+        self.logger.critical(msg, extra={"task_name": task_name})
 
 
 if __name__ == "__main__":
     logger = Logger(__name__)
     logger.debug("This is a debug level message.")
-    logger.info("This is an info level message.", thread_id="1234567890")
-    logger.warning("This is a warning level message.", thread_id="1234567890")
-    logger.error("This is an error level message.", thread_id="1234567890")
-    logger.critical("This is a critical level message.", thread_id="1234567890")
+    logger.info("This is an info level message.", task_name="1234567890")
+    logger.warning("This is a warning level message.", task_name="1234567890")
+    logger.error("This is an error level message.", task_name="1234567890")
+    logger.critical("This is a critical level message.", task_name="1234567890")

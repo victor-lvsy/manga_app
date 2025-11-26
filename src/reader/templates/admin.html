@@ -7,6 +7,17 @@
         <p>Gestion des utilisateurs et des paramètres système</p>
     </div>
 
+    <!-- System Information Section -->
+    <div class="admin-section">
+        <h2 class="section-title">Informations système</h2>
+        <div class="system-info">
+            <div class="info-item">
+                <span class="info-label">Uptime du serveur:</span>
+                <span class="info-value" id="server-uptime">Calcul en cours...</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Manga Management Section -->
     <div class="admin-section">
         <h2 class="section-title">Gestion des mangas</h2>
@@ -327,6 +338,34 @@
     margin-top: 0.5rem;
 }
 
+.system-info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.info-value {
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
 @media (max-width: 768px) {
     .admin-section {
         padding: 20px;
@@ -355,5 +394,46 @@
     }
 }
 </style>
+
+<script>
+(function() {
+    // Get the server start timestamp from the template
+    const serverStartTimestamp = {{ server_start_timestamp }};
+    const uptimeElement = document.getElementById('server-uptime');
+
+    function formatUptime(seconds) {
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        let uptimeStr = "";
+        if (days > 0) {
+            uptimeStr += `${days} jour${days > 1 ? 's' : ''}, `;
+        }
+        if (hours > 0) {
+            uptimeStr += `${hours} heure${hours > 1 ? 's' : ''}, `;
+        }
+        if (minutes > 0) {
+            uptimeStr += `${minutes} minute${minutes > 1 ? 's' : ''}, `;
+        }
+        uptimeStr += `${secs} seconde${secs > 1 ? 's' : ''}`;
+
+        return uptimeStr;
+    }
+
+    function updateUptime() {
+        const now = Date.now() / 1000; // Current time in seconds (Unix timestamp)
+        const uptimeSeconds = Math.floor(now - serverStartTimestamp);
+        uptimeElement.textContent = formatUptime(uptimeSeconds);
+    }
+
+    // Update immediately
+    updateUptime();
+
+    // Update every second
+    setInterval(updateUptime, 1000);
+})();
+</script>
 {% endblock %}
 

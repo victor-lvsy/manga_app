@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from src.logger import Logger
-from .comic_schema import Comic, Chapter, Status, ScanlationGroup, ComicType
+from .comic_schema import Comic, Chapter, Status, ScanlationGroup, ComicType, UpdateStatus
 
 logger = Logger("comic")
 
@@ -160,6 +160,20 @@ class ComicRepository:
             self.session.commit()
             self.session.refresh(comic)
             logger.info(f"Blacklist chapter removed: {chapter_number}")  # pylint: disable=logging-fstring-interpolation
+            return comic
+        except IntegrityError as e:
+            self.session.rollback()
+            raise e
+
+    def update_comic_update_status(self, comic_id: int, update_status: UpdateStatus):
+        """TODO"""
+        try:
+            comic = self.get_comic(comic_id)
+            comic.update_status = update_status
+            self.session.add(comic)
+            self.session.commit()
+            self.session.refresh(comic)
+            logger.info(f"Comic update status updated: {comic.name}")  # pylint: disable=logging-fstring-interpolation
             return comic
         except IntegrityError as e:
             self.session.rollback()
