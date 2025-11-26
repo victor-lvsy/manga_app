@@ -7,6 +7,30 @@
         <p>Gestion des utilisateurs et des paramètres système</p>
     </div>
 
+    <!-- Manga Management Section -->
+    <div class="admin-section">
+        <h2 class="section-title">Gestion des mangas</h2>
+
+        <div class="admin-form-section">
+            <h3>Recherche de nouveaux chapitres</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Recherche de nouveaux chapitres pour tous les mangas de la base de données.
+                Cette opération peut prendre du temps selon le nombre de mangas.
+            </p>
+            <form method="POST" action="{{ request.url_for('admin_update_all_mangas') }}"
+                  onsubmit="return confirm('Êtes-vous sûr de vouloir rechercher de nouveaux chapitres pour tous les mangas ? Cette opération peut prendre du temps.');">
+                <button type="submit" class="btn btn-primary btn-large">Rechercher de nouveaux chapitres pour tous les mangas</button>
+            </form>
+        </div>
+
+        <!-- Update Feedback Messages -->
+        {% if update_feedback %}
+        <div class="feedback feedback-{{ update_feedback.type }}" style="margin-top: 20px;">
+            {{ update_feedback.message }}
+        </div>
+        {% endif %}
+    </div>
+
     <!-- User Management Section -->
     <div class="admin-section">
         <h2 class="section-title">Gestion des utilisateurs</h2>
@@ -184,6 +208,14 @@
     font-size: 0.875rem;
     border-radius: 8px;
     transition: all 0.3s ease;
+}
+
+.btn-large {
+    padding: 14px 28px;
+    font-size: 1rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: 600;
 }
 
 .btn-warning {

@@ -116,5 +116,5 @@ if __name__ == "__main__":
     db_layer = DatabaseAccessLayer()
     with db_layer.managed_session() as test_session:
         user_repo = UserRepository(test_session)
-        created_user = user_repo.create_user(User(username="Victor", password="admin"))
+        created_user = user_repo.create_user(User(username="Victor", password="admin", role="admin"))
         print(created_user)

@@ -2,7 +2,7 @@
 import asyncio
 import logging
 import random
-import time
+import coloredlogs
 from typing import Optional
 from urllib.parse import urlparse, parse_qs
 
@@ -13,12 +13,8 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
 logger = logging.getLogger("vrf_generator")
-coloredlogs = None
-try:
-    import coloredlogs
-    coloredlogs.install(level=logging.INFO)
-except ImportError:
-    pass
+coloredlogs.install(level=logging.INFO)
+
 
 
 class VRFGenerator:
@@ -53,6 +49,15 @@ class VRFGenerator:
                     '--disable-blink-features=AutomationControlled',
                     '--disable-dev-shm-usage',
                     '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-web-security',
+                    '--disable-features=IsolateOrigins,site-per-process',
+                    '--disable-site-isolation-trials',
+                    '--disable-background-timer-throttling',
+                    '--disable-backgrounding-occluded-windows',
+                    '--disable-renderer-backgrounding',
+                    '--disable-features=TranslateUI',
+                    '--disable-ipc-flooding-protection',
                 ]
             )
 
@@ -64,35 +69,139 @@ class VRFGenerator:
         if self.context:
             await self.context.close()
 
+        # Randomize viewport slightly to avoid fingerprinting
+        viewport_width = random.choice([1920, 1366, 1536, 1440])
+        viewport_height = random.choice([1080, 768, 864, 900])
+
+        # Use a more recent Chrome user agent
+        user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        ]
+        user_agent = random.choice(user_agents)
+
         # Create a new context with realistic settings
         self.context = await self.browser.new_context(
-            viewport={'width': 1920, 'height': 1080},
-            user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            viewport={'width': viewport_width, 'height': viewport_height},
+            user_agent=user_agent,
             locale='en-US',
             timezone_id='America/New_York',
+            permissions=['geolocation'],
+            geolocation={'latitude': 40.7128, 'longitude': -74.0060},  # NYC coordinates
+            color_scheme='light',
             # Set Referer header like Kotlin does
             extra_http_headers={
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Sec-Fetch-User': '?1',
+                'Cache-Control': 'max-age=0',
                 'Referer': f'{self.base_url}/',
             }
         )
 
-        # Add stealth scripts to remove webdriver traces
+        # Add comprehensive stealth scripts to remove webdriver traces
         await self.context.add_init_script("""
+            // Remove webdriver property
             Object.defineProperty(navigator, 'webdriver', {
                 get: () => undefined
             });
 
+            // Override plugins
             Object.defineProperty(navigator, 'plugins', {
                 get: () => [1, 2, 3, 4, 5]
             });
 
+            // Override languages
             Object.defineProperty(navigator, 'languages', {
                 get: () => ['en-US', 'en']
             });
 
+            // Add chrome object
             window.chrome = {
-                runtime: {}
+                runtime: {},
+                loadTimes: function() {},
+                csi: function() {},
+                app: {}
             };
+
+            // Override permissions
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state: Notification.permission }) :
+                    originalQuery(parameters)
+            );
+
+            // Override getBattery
+            if (navigator.getBattery) {
+                navigator.getBattery = () => Promise.resolve({
+                    charging: true,
+                    chargingTime: 0,
+                    dischargingTime: Infinity,
+                    level: 1
+                });
+            }
+
+            // Override webdriver in window
+            Object.defineProperty(window, 'navigator', {
+                value: new Proxy(navigator, {
+                    has: (target, key) => (key === 'webdriver' ? false : key in target),
+                    get: (target, key) => (key === 'webdriver' ? undefined : target[key])
+                })
+            });
+
+            // Mock missing properties
+            Object.defineProperty(navigator, 'hardwareConcurrency', {
+                get: () => 8
+            });
+
+            Object.defineProperty(navigator, 'deviceMemory', {
+                get: () => 8
+            });
+
+            // Override toString methods
+            const getParameter = WebGLRenderingContext.prototype.getParameter;
+            WebGLRenderingContext.prototype.getParameter = function(parameter) {
+                if (parameter === 37445) {
+                    return 'Intel Inc.';
+                }
+                if (parameter === 37446) {
+                    return 'Intel Iris OpenGL Engine';
+                }
+                return getParameter.call(this, parameter);
+            };
+
+            // Override canvas fingerprinting
+            const toBlob = HTMLCanvasElement.prototype.toBlob;
+            const toDataURL = HTMLCanvasElement.prototype.toDataURL;
+            const getImageData = CanvasRenderingContext2D.prototype.getImageData;
+            HTMLCanvasElement.prototype.toBlob = function(callback, type, quality) {
+                const canvas = this;
+                return toBlob.call(canvas, callback, type, quality);
+            };
+            HTMLCanvasElement.prototype.toDataURL = function(type, quality) {
+                return toDataURL.call(this, type, quality);
+            };
+            CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {
+                return getImageData.call(this, sx, sy, sw, sh);
+            };
+
+            // Override Notification
+            const Notification = window.Notification;
+            window.Notification = function(title, options) {
+                return new Notification(title, options);
+            };
+            Object.setPrototypeOf(window.Notification, Notification);
+            window.Notification.permission = 'default';
+            window.Notification.requestPermission = () => Promise.resolve('default');
         """)
 
         self.page = await self.context.new_page()
@@ -135,40 +244,27 @@ class VRFGenerator:
                 await route.abort()
                 return
 
-            # Now apply requestIntercept logic (like Kotlin lines 120-146)
-            if capture_only:
-                # For search: if contains "ajax/manga/search" -> Capture, else -> Block
-                # (like Kotlin lines 136-143)
-                if url_pattern in url:
+
+            # For chapter pages: (like Kotlin lines 304-318)
+            # If host == "mangafire.to" && path contains "ajax/read":
+            #   - If path contains "ajax/read/chapter" or "ajax/read/volume" -> Capture
+            #   - Else -> Allow (other ajax/read calls)
+            # Else -> Block
+            if parsed_url_obj.netloc == "mangafire.to" and "ajax/read" in parsed_url_obj.path:
+                if any(pattern in parsed_url_obj.path for pattern in ["ajax/read/chapter", "ajax/read/volume"]):
                     logger.debug(f"captured: {url}")  # pylint: disable=W1203
                     self._captured_url = url
                     await route.abort()
                     return
                 else:
-                    logger.debug(f"denied: {url}")  # pylint: disable=W1203
-                    await route.abort()
+                    # Allow other ajax/read requests (like Kotlin line 314)
+                    logger.debug(f"allowed: {url}")  # pylint: disable=W1203
+                    await route.continue_()
                     return
             else:
-                # For chapter pages: (like Kotlin lines 304-318)
-                # If host == "mangafire.to" && path contains "ajax/read":
-                #   - If path contains "ajax/read/chapter" or "ajax/read/volume" -> Capture
-                #   - Else -> Allow (other ajax/read calls)
-                # Else -> Block
-                if parsed_url_obj.netloc == "mangafire.to" and "ajax/read" in parsed_url_obj.path:
-                    if any(pattern in parsed_url_obj.path for pattern in ["ajax/read/chapter", "ajax/read/volume"]):
-                        logger.debug(f"captured: {url}")  # pylint: disable=W1203
-                        self._captured_url = url
-                        await route.abort()
-                        return
-                    else:
-                        # Allow other ajax/read requests (like Kotlin line 314)
-                        logger.debug(f"allowed: {url}")  # pylint: disable=W1203
-                        await route.continue_()
-                        return
-                else:
-                    logger.debug(f"denied: {url}")  # pylint: disable=W1203
-                    await route.abort()
-                    return
+                logger.debug(f"denied: {url}")  # pylint: disable=W1203
+                await route.abort()
+                return
 
         await self.page.route("**/*", handle_route)
 
@@ -194,21 +290,119 @@ class VRFGenerator:
             await self._create_fresh_context_and_page()
 
             try:
-                # Setup request interception for chapter AJAX requests (like Kotlin lines 304-318)
+                # First, navigate to the base URL WITHOUT strict interception to establish a session
+                # This allows the site to set cookies and perform bot checks
+                logger.debug("Establishing session by visiting base URL first (allowing all resources)")
+
+                # Temporarily set up permissive routing for base URL visit
+                async def permissive_route(route: Route):
+                    """Allow all resources during initial base URL visit"""
+                    url = route.request.url
+                    # Only block images to speed things up
+                    if any(url.lower().endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico']):
+                        await route.abort()
+                    else:
+                        await route.continue_()
+
+                await self.page.route("**/*", permissive_route)
+
+                try:
+                    response = await self.page.goto(self.base_url, wait_until="domcontentloaded", timeout=30000)
+                    if response and response.status >= 400:
+                        logger.warning(f"Base URL returned status {response.status}")
+
+                    # Wait a bit for any redirects or bot checks
+                    await asyncio.sleep(random.uniform(2.0, 3.5))
+
+                    # Check if we're still on the base URL (not redirected)
+                    current_url = self.page.url
+                    if current_url != self.base_url and current_url != f"{self.base_url}/":
+                        logger.warning(f"Unexpected redirect from base URL to: {current_url}")
+                        # If redirected, try to go back to base URL
+                        if "mangafire.to" in current_url:
+                            await self.page.goto(self.base_url, wait_until="domcontentloaded", timeout=30000)
+                            await asyncio.sleep(random.uniform(1.0, 2.0))
+
+                    # Simulate human-like behavior: scroll a bit and interact
+                    await self.page.evaluate("""
+                        window.scrollTo(0, Math.random() * 300);
+                    """)
+                    await asyncio.sleep(random.uniform(0.8, 1.5))
+
+                    # Move mouse cursor slightly (simulates human presence)
+                    await self.page.mouse.move(random.randint(100, 500), random.randint(100, 500))
+                    await asyncio.sleep(random.uniform(0.3, 0.7))
+
+                except Exception as e:
+                    logger.warning(f"Error establishing session: {e}, continuing anyway")
+                    await asyncio.sleep(random.uniform(1.0, 2.0))
+
+                # Now set up strict request interception for chapter AJAX requests
+                await self.page.unroute("**/*")  # Remove permissive routing
                 await self._setup_request_interception("ajax/read", capture_only=False, target_url=chapter_url)
 
-                # Load chapter page
+                # Load chapter page with timeout and retry logic
                 logger.info(f"Loading chapter page to get VRF: {chapter_url}")  # pylint: disable=W1203
-                await self.page.goto(chapter_url, wait_until="networkidle")
+
+                # Now navigate to the chapter page
+                try:
+                    response = await self.page.goto(chapter_url, wait_until="domcontentloaded", timeout=30000)
+
+                    # Check if we were redirected back to main page (bot detection)
+                    current_url = self.page.url
+                    if current_url == self.base_url or current_url == f"{self.base_url}/":
+                        logger.warning(f"Detected redirect to main page. Current URL: {current_url}")
+                        raise Exception("Bot detected: redirected to main page")
+
+                    # Check response status
+                    if response and response.status >= 400:
+                        logger.warning(f"Received status {response.status} for {chapter_url}")
+                        raise Exception(f"HTTP {response.status} error")
+
+                except Exception as e:
+                    if "redirected" in str(e).lower() or "bot detected" in str(e).lower():
+                        raise
+                    logger.warning(f"Navigation error: {e}, retrying...")
+                    await asyncio.sleep(random.uniform(2.0, 3.0))
+                    response = await self.page.goto(chapter_url, wait_until="domcontentloaded", timeout=30000)
+                    current_url = self.page.url
+                    if current_url == self.base_url or current_url == f"{self.base_url}/":
+                        raise Exception("Bot detected: redirected to main page after retry")
 
                 # Human-like delay after page load
-                await asyncio.sleep(random.uniform(1.0, 2.5))
+                wait_time = random.uniform(1.5, 3.0)
+                await asyncio.sleep(wait_time)
+
+                # Simulate reading behavior: scroll down slowly
+                await self.page.evaluate("""
+                    (async () => {
+                        const scrollHeight = document.documentElement.scrollHeight;
+                        const viewportHeight = window.innerHeight;
+                        const scrollSteps = 5;
+                        const stepSize = (scrollHeight - viewportHeight) / scrollSteps;
+
+                        for (let i = 0; i < scrollSteps; i++) {
+                            window.scrollTo(0, stepSize * (i + 1));
+                            await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+                        }
+                    })();
+                """)
 
                 # Wait for page to be fully loaded
-                await self.page.wait_for_load_state("networkidle", timeout=10000)
+                try:
+                    await self.page.wait_for_load_state("networkidle", timeout=15000)
+                except Exception:
+                    logger.debug("Network idle timeout, continuing anyway")
+                    pass
 
                 # Additional wait for AJAX requests
-                await asyncio.sleep(random.uniform(2.0, 4.0))
+                wait_time = random.uniform(2.0, 4.0)
+                await asyncio.sleep(wait_time)
+
+                # Check again if we're still on the correct page
+                current_url = self.page.url
+                if current_url == self.base_url or current_url == f"{self.base_url}/":
+                    raise Exception("Bot detected: redirected to main page after page load")
 
                 # Extract VRF from captured URL
                 if not self._captured_url:

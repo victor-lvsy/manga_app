@@ -45,7 +45,7 @@ class AsuraScansScraper(BaseScraper):
         """TODO"""
         logger.info("Getting comic cover, Downloading...")
         images = soup.find_all("img")
-        cover_url = images[2].get("src")
+        cover_url = next((image.get("src") for image in images if image.get("alt") == "poster"), None)
         response = self._get_from_url(cover_url)
         return response.content, cover_url
 
@@ -110,7 +110,7 @@ class AsuraScansScraper(BaseScraper):
             ):
                 count += 1
                 logger.info(f"{comic.name} - Found new chapter {chapter} - Downloading...")  # pylint: disable=logging-fstring-interpolation
-                self.save_asura_chapter(comic, chapter, comic.url)
+                await self.save_asura_chapter(comic, chapter, comic.url)
 
         logger.info(f"{comic.name} - Found {count} new chapters")  # pylint: disable=logging-fstring-interpolation
 
@@ -154,7 +154,7 @@ class AsuraScansScraper(BaseScraper):
 
     async def save_asura_chapter(self, comic: Comic, chapter: float, comic_url_up_to_chapter: str):
         """TODO"""
-        full_chapter_url = comic_url_up_to_chapter + "chapter/" + str(chapter)
+        full_chapter_url = comic_url_up_to_chapter + ("/chapter/" if not comic_url_up_to_chapter.endswith("/") else "chapter/") + str(chapter)
         img_list = []
         response = self._get_from_url(full_chapter_url)
         soup = bs4.BeautifulSoup(response.content, "html.parser")
