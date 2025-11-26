@@ -1,15 +1,12 @@
 """TODO"""
-import logging
-
-import coloredlogs
 import bcrypt
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
+from src.logger import Logger
 from .user_schema import User, UserComicLink
 from .comic_schema import Comic, Chapter
 
-logger = logging.getLogger("user")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("user")
 
 
 class UserRepository:

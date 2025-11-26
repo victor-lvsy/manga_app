@@ -1,18 +1,15 @@
 """TODO"""
 import asyncio
 from datetime import datetime
-import logging
-
-import coloredlogs
 
 from src.scraper.asura_scans import AsuraScansScraper
 from src.scraper.mangafire_to import MangaFireToScraper
+from src.logger import Logger
 
 from .comic_schema import UpdateFrequency, ScanlationGroup, Comic, Status
 from .comic import ComicRepository
 
-logger = logging.getLogger("manga_updater")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("manga_updater")
 
 
 def to_number_of_days(update_frequency: UpdateFrequency) -> int:

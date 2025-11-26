@@ -2,8 +2,8 @@
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse
 from sqlmodel import select
-import logging
 
+from src.logger import Logger
 from src.reader.dependencies import (
     get_admin_user,
     get_user_repository,
@@ -13,8 +13,8 @@ from src.db import User, UserRepository, ComicRepository
 from src.reader.templates import templates
 from src.db import UserRole
 from src.db.manga_updater import MangaUpdater
-
-logger = logging.getLogger("app")
+from src.logger import Logger
+logger = Logger("admin")
 router = APIRouter()
 
 

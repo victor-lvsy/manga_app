@@ -1,12 +1,11 @@
 """TODO"""
 import os
 import uuid
-import logging
 import ssl
 from typing import Tuple
 from datetime import datetime
 
-import coloredlogs
+from src.logger import Logger
 import requests
 from requests.adapters import HTTPAdapter, Retry
 import certifi
@@ -27,8 +26,7 @@ from src.db import (
 )
 from src.config import LOCAL_FOLDER
 
-logger = logging.getLogger("base")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("base")
 
 
 def validate_url(url: str) -> str:

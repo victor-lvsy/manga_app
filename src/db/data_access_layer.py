@@ -1,14 +1,11 @@
 """Database access layer for managing SQL database connections and sessions."""
-import logging
 from contextlib import contextmanager
 from sqlmodel import SQLModel, create_engine, Session
-import coloredlogs
 # from sqlalchemy import event
 # from sqlalchemy.pool import Pool
+from src.logger import Logger
 
-
-logger = logging.getLogger("db-access-layer")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("db-access-layer")
 
 
 class DatabaseAccessLayer:

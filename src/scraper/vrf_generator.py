@@ -1,19 +1,17 @@
 """VRF token generator for MangaFire using Playwright to intercept network requests"""
 import asyncio
-import logging
 import random
-import coloredlogs
 from typing import Optional
 from urllib.parse import urlparse, parse_qs
 
+from src.logger import Logger
 try:
     from playwright.async_api import async_playwright, Browser, Page, Route
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
-logger = logging.getLogger("vrf_generator")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("vrf_generator")
 
 
 

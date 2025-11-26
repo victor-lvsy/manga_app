@@ -1,8 +1,6 @@
 """Main FastAPI application"""
 import os
-import logging
 
-import coloredlogs
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -11,13 +9,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette import status as starlette_status
 from starlette.responses import RedirectResponse
 
+from src.logger import Logger
 from src.reader.routers import auth, library, manga, chapter, add_manga, admin, images
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-logger = logging.getLogger("app")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("app")
 
 
 class AuthMiddleware(BaseHTTPMiddleware):

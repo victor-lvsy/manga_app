@@ -2,15 +2,12 @@
 import base64
 import ssl
 import os
-import logging
 
 import requests
 import certifi
-import coloredlogs
+from src.logger import Logger
 
-logger = logging.getLogger("ssl-checker")
-coloredlogs.install(level=logging.INFO)
-
+logger = Logger("ssl_checker")
 
 class SSLChecker:
     """TODO"""

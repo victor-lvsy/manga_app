@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from fastapi import APIRouter, Request, Depends, Query, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, JSONResponse
-import logging
+from src.logger import Logger
 
 from src.reader.dependencies import (
     get_current_user,
@@ -15,7 +15,7 @@ from src.reader.templates import templates
 from src.db.manga_updater import MangaUpdater
 from src.config import LOCAL_FOLDER
 
-logger = logging.getLogger("app")
+logger = Logger("manga_router")
 router = APIRouter()
 
 

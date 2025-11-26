@@ -1,15 +1,13 @@
 """TODO"""
-import logging
 from datetime import datetime
 
-import coloredlogs
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
+from src.logger import Logger
 from .comic_schema import Comic, Chapter, Status, ScanlationGroup, ComicType
 
-logger = logging.getLogger("comic")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("comic")
 
 
 class ComicRepository:

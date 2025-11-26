@@ -1,7 +1,7 @@
 """Chapter-related routes"""
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
-import logging
+from src.logger import Logger
 
 from src.reader.dependencies import (
     get_current_user,
@@ -13,7 +13,7 @@ from src.reader.dependencies import (
 from src.db import User, ComicRepository, ChapterRepository, PageRepository
 from src.reader.templates import templates
 
-logger = logging.getLogger("app")
+logger = Logger("chapter_router")
 router = APIRouter()
 
 

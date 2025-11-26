@@ -1,18 +1,16 @@
 """TODO"""
 import os
 import re
-import logging
 import json
 from typing import Tuple
 
-import coloredlogs
+from src.logger import Logger
 import bs4
 
 from src.db import Comic, ScanlationGroup
 from .base import BaseScraper, LOCAL_FOLDER
 
-logger = logging.getLogger("asura_scans")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("asura_scans")
 
 
 class AsuraScansScraper(BaseScraper):

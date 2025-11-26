@@ -1,7 +1,7 @@
 """Add manga routes"""
 from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-import logging
+from src.logger import Logger
 
 from src.reader.dependencies import get_current_user, get_comic_repository
 from src.db import User, ComicRepository
@@ -12,7 +12,7 @@ from src.scraper.asura_scans import AsuraScansScraper
 from src.scraper.mangafire_to import MangaFireToScraper
 from src.db.tags import get_tags, add_tag
 
-logger = logging.getLogger("app")
+logger = Logger("add_manga")
 router = APIRouter()
 
 SCRAPER_FACTORIES: dict[ScanlationGroup, type[BaseScraper]] = {

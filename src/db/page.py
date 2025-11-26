@@ -1,14 +1,11 @@
 """TODO"""
-import logging
-
-import coloredlogs
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from .comic_schema import Page
+from src.logger import Logger
 
-logger = logging.getLogger("page")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("page")
 
 
 class PageRepository:

@@ -1,20 +1,18 @@
 """TODO"""
-import logging
 import os
 from urllib.parse import urljoin
 from typing import List, Tuple
 
 import requests
-import coloredlogs
 import bs4
 
+from src.logger import Logger
 from src.db import ScanlationGroup, Comic
 from .base import BaseScraper, LOCAL_FOLDER
 from .ssl import SSLChecker
 from .vrf_generator import VRFGenerator
 
-logger = logging.getLogger("mangafire_to")
-coloredlogs.install(level=logging.INFO)
+logger = Logger("mangafire_to")
 
 
 class MangaFireToScraper(BaseScraper):
