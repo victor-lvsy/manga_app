@@ -1,6 +1,7 @@
 """Chapter-related routes"""
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.exc import IntegrityError
 from src.logger import Logger
 
 from src.reader.dependencies import (
@@ -9,8 +10,9 @@ from src.reader.dependencies import (
     get_comic_repository,
     get_chapter_repository,
     get_page_repository,
+    get_user_repository,
 )
-from src.db import User, ComicRepository, ChapterRepository, PageRepository
+from src.db import User, ComicRepository, ChapterRepository, PageRepository, UserRepository
 from src.reader.templates import templates
 
 logger = Logger("chapter_router")
@@ -26,12 +28,20 @@ async def view_chapter(
     comic_repo: ComicRepository = Depends(get_comic_repository),
     chapter_repo: ChapterRepository = Depends(get_chapter_repository),
     page_repo: PageRepository = Depends(get_page_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
 ):
     """TODO"""
     logger.debug(f"Viewing chapter {chapter_number} of manga {manga_id} from user {current_user.username}")
     chapter = comic_repo.get_chapter_by_number(int(manga_id), float(chapter_number))
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
+
+    # Mark chapter as read for the user
+    try:
+        user_repo.user_mark_chapter_as_read(current_user.id, chapter.id)
+    except IntegrityError:
+        # Chapter already marked as read, which is fine
+        pass
 
     pages = [page.id for page in chapter_repo.get_chapter_pages(chapter.id)]
     if not pages:

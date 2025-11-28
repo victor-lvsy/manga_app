@@ -46,12 +46,18 @@ async def manga_detail(
     chapters = list_chapters(comic, comic_repo)
     is_following = user_repo.is_following_comic(current_user.id, comic.id)
 
+    # Get read chapters for the user
+    read_chapters = user_repo.get_user_read_chapters(current_user.id, comic.id)
+    # Format chapter numbers to match the format used in list_chapters
+    read_chapter_numbers = {f"{ch.number}".rstrip("0").rstrip(".") for ch in read_chapters}
+
     return templates.TemplateResponse("manga_index.html", {
         "request": request,
         "manga": comic.model_dump(),
         "chapters": chapters,
         "manga_root": str(Path(comic.local_path)),
         "is_following": is_following,
+        "read_chapter_numbers": read_chapter_numbers,
         "feedback": None,
     })
 

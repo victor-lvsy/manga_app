@@ -87,22 +87,6 @@ class ComicRepository:
             self.session.rollback()
             raise e
 
-    # def create_chapter(self, chapter: Chapter):
-    #     """TODO"""
-    #     try:
-    #         self.session.add(chapter)
-    #         self.session.commit()
-    #         self.session.refresh(chapter)
-    #         if chapter.comic_id:
-    #             comic = self.get_comic(chapter.comic_id)
-    #             if comic:
-    #                 self.session.refresh(comic)
-    #         logger.debug(f"Chapter created: {chapter.number}")  # pylint: disable=logging-fstring-interpolation
-    #         return chapter
-    #     except IntegrityError as e:
-    #         self.session.rollback()
-    #         raise e
-
     def get_comic_chapters(self, comic_id: int) -> list[Chapter]:
         """TODO"""
         return self.session.exec(select(Chapter).where(Chapter.comic_id == comic_id)).all()

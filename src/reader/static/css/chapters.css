@@ -73,6 +73,14 @@
     text-overflow: ellipsis;
 }
 
+.chapter-link.read {
+    opacity: 0.6;
+}
+
+.chapter-link.read .chapter-number {
+    color: var(--text-secondary);
+}
+
 .chapter-title {
     display: block;
     color: var(--text-secondary);

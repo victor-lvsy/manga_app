@@ -119,7 +119,7 @@
         <ul class="chapter-list">
             {% for ch in chapters|reverse %}
             <li class="chapter-item">
-                <a href="{{ request.url_for('view_chapter', manga_id=manga.id, chapter_number=ch) }}" class="chapter-link">
+                <a href="{{ request.url_for('view_chapter', manga_id=manga.id, chapter_number=ch) }}" class="chapter-link {% if read_chapter_numbers is defined and ch in read_chapter_numbers %}read{% endif %}">
                     <span class="chapter-number">Chapitre {{ ch }}</span>
                 </a>
             </li>

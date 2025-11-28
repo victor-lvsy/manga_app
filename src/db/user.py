@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from src.logger import Logger
-from .user_schema import User, UserComicLink
+from .user_schema import User, UserComicLink, UserChapterLink
 from .comic_schema import Comic, Chapter
 
 logger = Logger("user")
@@ -60,7 +60,21 @@ class UserRepository:
 
     def get_user_read_chapters(self, user_id: int, comic_id: int) -> list[Chapter]:
         """TODO"""
-        return self.session.exec(select(Chapter).where(Chapter.user_id == user_id, Chapter.comic_id == comic_id)).all()
+        return self.session.exec(select(Chapter).join(UserChapterLink).where(UserChapterLink.user_id == user_id, Chapter.comic_id == comic_id)).all()
+
+    def user_mark_chapter_as_read(self, user_id: int, chapter_id: int) -> bool:
+        """Mark a chapter as read for a user"""
+        try:
+            link = UserChapterLink(user_id=user_id, chapter_id=chapter_id)
+            self.session.add(link)
+            self.session.commit()
+            self.session.refresh(link)
+            logger.debug(f"User {user_id} marked chapter {chapter_id} as read")  # pylint: disable=logging-fstring-interpolation
+            return True
+        except IntegrityError as e:
+            self.session.rollback()
+            logger.error(f"Error marking chapter as read: {e}")  # pylint: disable=logging-fstring-interpolation
+            raise e
 
     def is_following_comic(self, user_id: int, comic_id: int) -> bool:
         """Check if user is following a comic"""
