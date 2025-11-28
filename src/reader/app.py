@@ -50,8 +50,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     """Lifespan for the application"""
+    context_manager = get_context_manager()
+    context_manager.start()
     yield
-    get_context_manager().cleanup()
+    context_manager.cleanup()
 
 app = FastAPI(title="Manga Viewer", lifespan=lifespan)
 

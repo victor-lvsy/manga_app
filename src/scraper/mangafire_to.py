@@ -1,7 +1,7 @@
 """TODO"""
 from urllib.parse import urljoin
 from typing import List, Tuple
-
+from decimal import Decimal
 import requests
 import bs4
 
@@ -78,7 +78,7 @@ class MangaFireToScraper(BaseScraper):
             existing_chapters_numbers = [c.number for c in existing_chapters] if existing_chapters else []
             blacklist_chapters = self.comic_repository.get_comic(comic.id).blacklist_chapters if self.comic_repository.get_comic(comic.id).blacklist_chapters else []
             if (
-                float(chapter[0])
+                Decimal(chapter[0])
                 not in existing_chapters_numbers
                 and float(chapter[0]) not in blacklist_chapters
             ):

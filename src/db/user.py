@@ -1,7 +1,10 @@
 """TODO"""
+from datetime import datetime
+
 import bcrypt
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
+
 from src.logger import Logger
 from .user_schema import User, UserComicLink
 from .comic_schema import Comic, Chapter
@@ -106,6 +109,15 @@ class UserRepository:
             self.session.rollback()
             logger.error(f"Error unfollowing comic: {e}")  # pylint: disable=logging-fstring-interpolation
             raise e
+
+    def update_user_activity(self, user_id: int, activity_time: int):
+        """Update user activity"""
+        user = self.get_user(user_id)
+        user.activity_time = user.activity_time + activity_time
+        user.last_activity = datetime.now()
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,11 @@ from .comic_schema import Chapter, Page
 logger = Logger("chapter")
 
 
+def get_chapter_number(chapter: Chapter) -> str:
+    """TODO"""
+    return str(chapter.number).rstrip("0").rstrip(".")
+
+
 class ChapterRepository:
     """TODO"""
     def __init__(self, session: Session):
@@ -21,7 +26,7 @@ class ChapterRepository:
             self.session.commit()
             self.session.refresh(chapter)
             self.session.refresh(chapter.comic)
-            logger.debug(f"Chapter created: {chapter.comic.name} - {str(chapter.number)}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Chapter created: {chapter.comic.name} - {get_chapter_number(chapter)}")  # pylint: disable=logging-fstring-interpolation
             return chapter
         except IntegrityError as e:
             self.session.rollback()
@@ -37,7 +42,7 @@ class ChapterRepository:
             chapter = self.get_chapter(chapter_id)
             self.session.delete(chapter)
             self.session.commit()
-            logger.debug(f"Chapter deleted: {chapter.comic.name} - {str(chapter.number)}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Chapter deleted: {chapter.comic.name} - {get_chapter_number(chapter)}")  # pylint: disable=logging-fstring-interpolation
         except IntegrityError as e:
             self.session.rollback()
             raise e
@@ -54,7 +59,7 @@ class ChapterRepository:
             self.session.add(chapter)
             self.session.commit()
             self.session.refresh(chapter)
-            logger.debug(f"Chapter downloaded: {chapter.comic.name} - {str(chapter.number)}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Chapter downloaded: {chapter.comic.name} - {get_chapter_number(chapter)}")  # pylint: disable=logging-fstring-interpolation
         except IntegrityError as e:
             self.session.rollback()
             raise e
@@ -67,7 +72,7 @@ class ChapterRepository:
                 Chapter.comic_id == chapter.comic_id,
                 Chapter.number < chapter.number
             )
-            .order_by(Chapter.number.desc())     # largest number smaller than current
+            .order_by(Chapter.number.desc())  # pylint: disable=no-member
             .limit(1)
         ).first()
 
@@ -79,6 +84,6 @@ class ChapterRepository:
                 Chapter.comic_id == chapter.comic_id,
                 Chapter.number > chapter.number
             )
-            .order_by(Chapter.number.asc())      # smallest number greater than current
+            .order_by(Chapter.number.asc())  # pylint: disable=no-member
             .limit(1)
         ).first()

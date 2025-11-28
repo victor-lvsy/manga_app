@@ -56,7 +56,7 @@ class DatabaseAccessLayer:
         Yields:
             Session: A database session that is automatically closed after use
         """
-        session = Session(self.engine)
+        session = Session(self.engine, expire_on_commit=False)
         try:
             yield session
         finally:
@@ -68,7 +68,7 @@ class DatabaseAccessLayer:
         Returns:
             Session: A new SQLModel session
         """
-        session = Session(self.engine)
+        session = Session(self.engine, expire_on_commit=False)
         try:
             yield session
         finally:
