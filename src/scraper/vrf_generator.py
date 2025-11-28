@@ -14,6 +14,10 @@ except ImportError:
 logger = Logger("vrf_generator")
 
 
+class VRFGeneratorError(Exception):
+    """Exception raised when VRF generator fails"""
+    def __init__(self, message: str):
+        super().__init__(message)
 
 class VRFGenerator:
     """Generates VRF tokens by intercepting AJAX requests using Playwright"""
@@ -327,7 +331,7 @@ class VRFGenerator:
                 await self._setup_request_interception("ajax/read", capture_only=False, target_url=chapter_url)
 
                 # Load chapter page with timeout and retry logic
-                logger.info(f"Loading chapter page to get VRF: {chapter_url}")  # pylint: disable=W1203
+                logger.debug(f"Loading chapter page to get VRF: {chapter_url}")  # pylint: disable=W1203
 
                 # Now navigate to the chapter page
                 try:
@@ -391,7 +395,7 @@ class VRFGenerator:
 
                 # Extract VRF from captured URL
                 if not self._captured_url:
-                    raise Exception(f"Unable to capture AJAX request for chapter URL: {chapter_url}")  # pylint: disable=W0719
+                    raise VRFGeneratorError(f"Unable to capture AJAX request for chapter URL: {chapter_url}")  # pylint: disable=W0719
 
                 parsed_url = urlparse(self._captured_url)
                 path = parsed_url.path
@@ -403,7 +407,7 @@ class VRFGenerator:
 
                 # Cache the result
                 self._vrf_cache[chapter_url] = (path, vrf)
-                logger.info("Successfully obtained VRF token for chapter")
+                logger.debug("Successfully obtained VRF token for chapter")
                 return path, vrf
 
             except Exception as e:

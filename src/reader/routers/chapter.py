@@ -102,7 +102,7 @@ async def blacklist_delete_chapter(
         comic_repo.add_blacklist_chapter(int(manga_id), chapter.number)
         # Delete the chapter
         chapter_repo.delete_chapter(chapter.id)
-        logger.info(f"Chapter {chapter.number} blacklisted and deleted")  # pylint: disable=logging-fstring-interpolation
+        logger.debug(f"Chapter {chapter.number} blacklisted and deleted")  # pylint: disable=logging-fstring-interpolation
         return RedirectResponse(
             url=request.url_for("manga_detail", manga_id=manga_id),
             status_code=303,

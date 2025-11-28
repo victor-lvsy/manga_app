@@ -138,7 +138,7 @@ async def create_manga(
         return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
 
     try:
-        logger.info("Création du manga...")
+        logger.debug("Création du manga...")
         with scraper_factory() as scraper:
             comic = scraper.create_comic(
                 comic_name=name,

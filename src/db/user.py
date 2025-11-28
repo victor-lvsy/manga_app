@@ -26,7 +26,7 @@ class UserRepository:
             self.session.add(user)
             self.session.commit()
             self.session.refresh(user)
-            logger.info(f"User created: {user.username}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"User created: {user.username}")  # pylint: disable=logging-fstring-interpolation
             return user
         except IntegrityError as e:
             self.session.rollback()
@@ -46,7 +46,7 @@ class UserRepository:
             deleted_user = self.get_user(user_id)
             self.session.delete(deleted_user)
             self.session.commit()
-            logger.info(f"User deleted: {deleted_user.username}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"User deleted: {deleted_user.username}")  # pylint: disable=logging-fstring-interpolation
         except IntegrityError as e:
             self.session.rollback()
             raise e
@@ -78,7 +78,7 @@ class UserRepository:
             link = UserComicLink(user_id=user_id, comic_id=comic_id)
             self.session.add(link)
             self.session.commit()
-            logger.info(f"User {user_id} followed comic {comic_id}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"User {user_id} followed comic {comic_id}")  # pylint: disable=logging-fstring-interpolation
             return True
         except IntegrityError as e:
             self.session.rollback()
@@ -100,7 +100,7 @@ class UserRepository:
         try:
             self.session.delete(link)
             self.session.commit()
-            logger.info(f"User {user_id} unfollowed comic {comic_id}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"User {user_id} unfollowed comic {comic_id}")  # pylint: disable=logging-fstring-interpolation
             return True
         except IntegrityError as e:
             self.session.rollback()

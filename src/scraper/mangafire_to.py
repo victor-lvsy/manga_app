@@ -10,7 +10,7 @@ from src.logger import Logger
 from src.db import ScanlationGroup, Comic
 from .base import BaseScraper, LOCAL_FOLDER
 from .ssl import SSLChecker
-from .vrf_generator import VRFGenerator
+from .vrf_generator import VRFGenerator, VRFGeneratorError
 
 logger = Logger("mangafire_to")
 
@@ -38,7 +38,15 @@ class MangaFireToScraper(BaseScraper):
             self, chapter_number: int, chapter_url: str, hl: str
     ) -> List[str]:
         """TODO"""
-        path, vrf = await self.vrf_generator.get_chapter_vrf_async(chapter_url)
+        while True:
+            try:
+                path, vrf = await self.vrf_generator.get_chapter_vrf_async(chapter_url)
+                break
+            except VRFGeneratorError as e:
+                logger.warning(f"Error getting chapter VRF token, retrying...: {e}")  # pylint: disable=W1203
+            except Exception as e:
+                logger.error(f"Error getting chapter VRF token: {e}")  # pylint: disable=W1203
+                raise
         params = {'vrf': vrf}
         data_json = self._get(path=path, params=params).json()
         images = data_json.get('result').get('images')
@@ -76,10 +84,10 @@ class MangaFireToScraper(BaseScraper):
                 and float(chapter[0]) not in blacklist_chapters
             ):
                 count += 1
-                logger.info(f"{comic.name} - Found new chapter {chapter[0]} - Downloading...")  # pylint: disable=logging-fstring-interpolation
+                logger.debug(f"{comic.name} - Found new chapter {chapter[0]} - Downloading...")  # pylint: disable=logging-fstring-interpolation
                 await self.save_mangafire_chapter(comic, chapter[0], chapter[1])
 
-        logger.info(f"{comic.name} - Found {count} new chapters")  # pylint: disable=logging-fstring-interpolation
+        logger.debug(f"{comic.name} - Found {count} new chapters")  # pylint: disable=logging-fstring-interpolation
         return comic.name, count
 
     def get_chapter_links(self, soup: bs4.BeautifulSoup) -> List[Tuple[str, str]]:
@@ -92,7 +100,7 @@ class MangaFireToScraper(BaseScraper):
 
     def get_comic_cover(self, soup: bs4.BeautifulSoup):
         """TODO"""
-        logger.info("Getting comic cover, Downloading...")
+        logger.debug("Getting comic cover, Downloading...")
         cover_div = soup.find('div', attrs={'class': 'poster'})
         cover_img = cover_div.find('img')
         cover_url = cover_img.get("src")

@@ -43,9 +43,9 @@ class MangaUpdater:
     async def force_update(self, comic: Comic):
         """TODO"""
         try:
-            logger.info(f"Updating {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Updating {comic.name}")  # pylint: disable=logging-fstring-interpolation
             if comic.update_status == UpdateStatus.PENDING:
-                logger.info(f"Comic {comic.name} is already being updated")  # pylint: disable=logging-fstring-interpolation
+                logger.debug(f"Comic {comic.name} is already being updated")  # pylint: disable=logging-fstring-interpolation
                 return
             self.comic_repository.update_comic_update_status(comic.id, UpdateStatus.PENDING)
             if comic.scanlation_group == ScanlationGroup.ASURA_SCANS:

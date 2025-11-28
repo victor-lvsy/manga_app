@@ -37,17 +37,17 @@ class DatabaseAccessLayer:
         # @event.listens_for(Pool, "checkout")
         # def on_checkout(dbapi_connection, connection_record, connection_proxy):
         #     """Log when a connection is checked out from the pool."""
-        #     logger.info("Connection checked out from pool")
+        #     logger.debug("Connection checked out from pool")
 
         # @event.listens_for(Pool, "checkin")
         # def on_checkin(dbapi_connection, connection_record):
         #     """Log when a connection is returned to the pool."""
-        #     logger.info("Connection returned to pool")
+        #     logger.debug("Connection returned to pool")
 
         # @event.listens_for(Pool, "connect")
         # def on_connect(dbapi_connection, connection_record):
         #     """Log when a new connection is created."""
-        #     logger.info("New connection created")
+        #     logger.debug("New connection created")
 
     @contextmanager
     def managed_session(self):

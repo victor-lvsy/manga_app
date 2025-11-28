@@ -1,5 +1,6 @@
 """TODO"""
 from datetime import datetime
+from decimal import Decimal
 
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
@@ -21,7 +22,7 @@ class ComicRepository:
             self.session.add(comic)
             self.session.commit()
             self.session.refresh(comic)
-            logger.info(f"Comic created: {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Comic created: {comic.name}")  # pylint: disable=logging-fstring-interpolation
             return comic
         except IntegrityError as e:
             self.session.rollback()
@@ -55,7 +56,7 @@ class ComicRepository:
             self.session.add(comic)
             self.session.commit()
             self.session.refresh(comic)
-            logger.info(f"Comic last updated: {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Comic last updated: {comic.name}")  # pylint: disable=logging-fstring-interpolation
             return comic
         except IntegrityError as e:
             self.session.rollback()
@@ -69,7 +70,7 @@ class ComicRepository:
             self.session.add(comic)
             self.session.commit()
             self.session.refresh(comic)
-            logger.info(f"Comic status updated: {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Comic status updated: {comic.name}")  # pylint: disable=logging-fstring-interpolation
             return comic
         except IntegrityError as e:
             self.session.rollback()
@@ -81,26 +82,26 @@ class ComicRepository:
             comic = self.get_comic(comic_id)
             self.session.delete(comic)
             self.session.commit()
-            logger.info(f"Comic deleted: {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Comic deleted: {comic.name}")  # pylint: disable=logging-fstring-interpolation
         except IntegrityError as e:
             self.session.rollback()
             raise e
 
-    def create_chapter(self, chapter: Chapter):
-        """TODO"""
-        try:
-            self.session.add(chapter)
-            self.session.commit()
-            self.session.refresh(chapter)
-            if chapter.comic_id:
-                comic = self.get_comic(chapter.comic_id)
-                if comic:
-                    self.session.refresh(comic)
-            logger.info(f"Chapter created: {chapter.number}")  # pylint: disable=logging-fstring-interpolation
-            return chapter
-        except IntegrityError as e:
-            self.session.rollback()
-            raise e
+    # def create_chapter(self, chapter: Chapter):
+    #     """TODO"""
+    #     try:
+    #         self.session.add(chapter)
+    #         self.session.commit()
+    #         self.session.refresh(chapter)
+    #         if chapter.comic_id:
+    #             comic = self.get_comic(chapter.comic_id)
+    #             if comic:
+    #                 self.session.refresh(comic)
+    #         logger.debug(f"Chapter created: {chapter.number}")  # pylint: disable=logging-fstring-interpolation
+    #         return chapter
+    #     except IntegrityError as e:
+    #         self.session.rollback()
+    #         raise e
 
     def get_comic_chapters(self, comic_id: int) -> list[Chapter]:
         """TODO"""
@@ -108,7 +109,9 @@ class ComicRepository:
 
     def get_chapter_by_number(self, comic_id: int, chapter_number: float) -> Chapter:
         """TODO"""
-        return self.session.exec(select(Chapter).where(Chapter.comic_id == comic_id, Chapter.number == chapter_number)).first()
+        logger.debug(f"Getting chapter by number: {comic_id} - {chapter_number}")  # pylint: disable=logging-fstring-interpolation
+        chapter = self.session.exec(select(Chapter).where(Chapter.comic_id == comic_id, Chapter.number == chapter_number)).first()
+        return chapter
 
     def update_comic_tags(self, comic_id: int, tags: list[str]):
         """TODO"""
@@ -118,7 +121,7 @@ class ComicRepository:
             self.session.add(comic)
             self.session.commit()
             self.session.refresh(comic)
-            logger.info(f"Comic tags updated: {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Comic tags updated: {comic.name}, tags: {tags}")  # pylint: disable=logging-fstring-interpolation
             return comic
         except IntegrityError as e:
             self.session.rollback()
@@ -144,7 +147,7 @@ class ComicRepository:
             self.session.add(comic)
             self.session.commit()
             self.session.refresh(comic)
-            logger.info(f"Blacklist chapter added: {chapter_number}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Blacklist chapter added: {comic.name} - {chapter_number}")  # pylint: disable=logging-fstring-interpolation
             return comic
         except IntegrityError as e:
             self.session.rollback()
@@ -159,7 +162,7 @@ class ComicRepository:
             self.session.add(comic)
             self.session.commit()
             self.session.refresh(comic)
-            logger.info(f"Blacklist chapter removed: {chapter_number}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Blacklist chapter removed: {comic.name} - {chapter_number}")  # pylint: disable=logging-fstring-interpolation
             return comic
         except IntegrityError as e:
             self.session.rollback()
@@ -173,7 +176,7 @@ class ComicRepository:
             self.session.add(comic)
             self.session.commit()
             self.session.refresh(comic)
-            logger.info(f"Comic update status updated: {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Comic update status updated: {comic.name}")  # pylint: disable=logging-fstring-interpolation
             return comic
         except IntegrityError as e:
             self.session.rollback()

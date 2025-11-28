@@ -23,6 +23,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """Middleware to check authentication for protected routes"""
     async def dispatch(self, request, call_next):
         # Allow access to login, logout, and static files without authentication
+        request.scope["scheme"] = "https"
         if (request.url.path.startswith("/static")
                 or request.url.path == "/login"
                 or request.url.path == "/logout"):
@@ -69,4 +70,4 @@ app.include_router(images.router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8888)
+    uvicorn.run(app, host="0.0.0.0", port=8888, proxy_headers=True, forwarded_allow_ips="*", log_level="error")

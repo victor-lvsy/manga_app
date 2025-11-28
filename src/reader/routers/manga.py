@@ -26,7 +26,7 @@ def list_chapters(comic, comic_repo: ComicRepository):
     chapters = comic_repo.get_comic_chapters(comic.id)
     # Sort chapters by number and return relative paths
     sorted_chapters = sorted(chapters, key=lambda chap: chap.number)
-    return [f"{c.number}".removesuffix(".0") for c in sorted_chapters]
+    return [f"{c.number}".rstrip("0").rstrip(".") for c in sorted_chapters]
 
 
 @router.get("/manga/{manga_id}", response_class=HTMLResponse)

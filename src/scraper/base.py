@@ -76,7 +76,7 @@ class BaseScraper:
             if os.path.exists(custom_cert_path):
                 try:
                     ssl_context.load_verify_locations(custom_cert_path)
-                    logger.info(f"Loaded custom certificate from {custom_cert_path}")  # pylint: disable=logging-fstring-interpolation
+                    logger.debug(f"Loaded custom certificate from {custom_cert_path}")  # pylint: disable=logging-fstring-interpolation
                 except Exception as e:
                     logger.warning(f"Failed to load custom certificate: {e}")  # pylint: disable=logging-fstring-interpolation
 

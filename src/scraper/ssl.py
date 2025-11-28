@@ -142,13 +142,13 @@ class SSLChecker:
             if not os.path.exists(backup_path):
                 import shutil
                 shutil.copy2(certifi_path, backup_path)
-                logger.info(f"Created backup of certifi bundle at {backup_path}")  # pylint: disable=logging-fstring-interpolation
+                logger.debug(f"Created backup of certifi bundle at {backup_path}")  # pylint: disable=logging-fstring-interpolation
 
             # Append the new certificate to the bundle
             with open(certifi_path, 'ab') as outfile:
                 outfile.write(b'\n' + new_cert + b'\n')
 
-            logger.info(f"Successfully added certificate from {cert_path} to certifi bundle")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Successfully added certificate from {cert_path} to certifi bundle")  # pylint: disable=logging-fstring-interpolation
             return True
 
         except Exception as e:

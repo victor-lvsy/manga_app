@@ -21,7 +21,7 @@ class ChapterRepository:
             self.session.commit()
             self.session.refresh(chapter)
             self.session.refresh(chapter.comic)
-            logger.info(f"Chapter created: {str(chapter.number)}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Chapter created: {chapter.comic.name} - {str(chapter.number)}")  # pylint: disable=logging-fstring-interpolation
             return chapter
         except IntegrityError as e:
             self.session.rollback()
@@ -37,7 +37,7 @@ class ChapterRepository:
             chapter = self.get_chapter(chapter_id)
             self.session.delete(chapter)
             self.session.commit()
-            logger.info(f"Chapter deleted: {str(chapter.number)}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Chapter deleted: {chapter.comic.name} - {str(chapter.number)}")  # pylint: disable=logging-fstring-interpolation
         except IntegrityError as e:
             self.session.rollback()
             raise e
@@ -54,15 +54,32 @@ class ChapterRepository:
             self.session.add(chapter)
             self.session.commit()
             self.session.refresh(chapter)
-            logger.info(f"Chapter downloaded: {str(chapter.number)}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Chapter downloaded: {chapter.comic.name} - {str(chapter.number)}")  # pylint: disable=logging-fstring-interpolation
         except IntegrityError as e:
             self.session.rollback()
             raise e
 
     def get_previous_chapter(self, chapter: Chapter) -> Chapter:
         """TODO"""
-        return self.session.exec(select(Chapter).where(Chapter.comic_id == chapter.comic_id, Chapter.number < chapter.number)).first()
+        return self.session.exec(
+            select(Chapter)
+            .where(
+                Chapter.comic_id == chapter.comic_id,
+                Chapter.number < chapter.number
+            )
+            .order_by(Chapter.number.desc())     # largest number smaller than current
+            .limit(1)
+        ).first()
 
-    def get_next_chapter(self, chapter: Chapter) -> Chapter:
+
+    def get_next_chapter(self, chapter: Chapter) -> Chapter | None:
         """TODO"""
-        return self.session.exec(select(Chapter).where(Chapter.comic_id == chapter.comic_id, Chapter.number > chapter.number)).first()
+        return self.session.exec(
+            select(Chapter)
+            .where(
+                Chapter.comic_id == chapter.comic_id,
+                Chapter.number > chapter.number
+            )
+            .order_by(Chapter.number.asc())      # smallest number greater than current
+            .limit(1)
+        ).first()

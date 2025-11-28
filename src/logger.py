@@ -79,7 +79,6 @@ class Logger:
     :type level: int
     """
     def __init__(self, name, level=logging.DEBUG):
-        print(f"init logger {name}")
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
         fmt = CustomFormatter()

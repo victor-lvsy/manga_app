@@ -41,7 +41,7 @@ class AsuraScansScraper(BaseScraper):
 
     def get_comic_cover(self, soup: bs4.BeautifulSoup):
         """TODO"""
-        logger.info("Getting comic cover, Downloading...")
+        logger.debug("Getting comic cover, Downloading...")
         images = soup.find_all("img")
         cover_url = next((image.get("src") for image in images if image.get("alt") == "poster"), None)
         response = self._get_from_url(cover_url)
@@ -83,10 +83,10 @@ class AsuraScansScraper(BaseScraper):
                 and float(chapter) not in blacklist_chapters
             ):
                 count += 1
-                logger.info(f"{comic.name} - Found new chapter {chapter} - Downloading...")  # pylint: disable=logging-fstring-interpolation
+                logger.debug(f"{comic.name} - Found new chapter {chapter} - Downloading...")  # pylint: disable=logging-fstring-interpolation
                 await self.save_asura_chapter(comic, chapter, comic.url)
 
-        logger.info(f"{comic.name} - Found {count} new chapters")  # pylint: disable=logging-fstring-interpolation
+        logger.debug(f"{comic.name} - Found {count} new chapters")  # pylint: disable=logging-fstring-interpolation
 
         return comic.name, count
 
@@ -142,9 +142,9 @@ class AsuraScansScraper(BaseScraper):
             img_list = await self.get_img_list(soup)
 
         if len(img_list) < 8:
-            logger.info(f"{comic.name}, chapter {chapter} - Probably missing images, ({len(img_list)} pages)")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"{comic.name}, chapter {chapter} - Probably missing images, ({len(img_list)} pages)")  # pylint: disable=logging-fstring-interpolation
         else:
-            logger.info(f"{comic.name}, chapter {chapter} - Downloading {len(img_list)} images")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"{comic.name}, chapter {chapter} - Downloading {len(img_list)} images")  # pylint: disable=logging-fstring-interpolation
 
         self.save_chapter(comic, chapter, full_chapter_url, [(img["order"], img["url"]) for img in img_list])
 

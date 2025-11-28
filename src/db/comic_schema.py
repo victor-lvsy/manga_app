@@ -1,5 +1,6 @@
 """TODO"""
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 from typing import Any, Optional, TYPE_CHECKING, List
 from sqlmodel import SQLModel, Field, Relationship, Column
@@ -59,7 +60,7 @@ class Chapter(SQLModel, table=True):
     """TODO"""
     __tablename__ = "Chapter"
     id: int | None = Field(default=None, primary_key=True)
-    number: float
+    number: Decimal = Field(default=0, max_digits=10, decimal_places=3)
     url: str
     local_path: str
     downloaded: bool = Field(default=False)

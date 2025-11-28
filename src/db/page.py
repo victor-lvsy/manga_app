@@ -34,7 +34,7 @@ class PageRepository:
             page = self.get_page(page_id)
             self.session.delete(page)
             self.session.commit()
-            logger.info(f"Page deleted: {page.number}")  # pylint: disable=logging-fstring-interpolation
+            logger.debug(f"Page deleted: {page.number}")  # pylint: disable=logging-fstring-interpolation
         except IntegrityError as e:
             self.session.rollback()
             raise e
