@@ -25,4 +25,3 @@ def get_current_user_from_request(request: Request):
 
 # Add helper function to template globals
 templates.env.globals["get_current_user_from_request"] = get_current_user_from_request
-

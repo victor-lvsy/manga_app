@@ -52,11 +52,11 @@ class CustomFormatter(logging.Formatter):
     fmt = "{asctime} - {levelname}:{name}[{task_name}] - {message} ({filename}:{lineno})"
     style = "{"
     FORMATS = {
-        logging.DEBUG: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_blue + "{levelname} " + reset +  "{message}",
-        logging.INFO: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_white + "{levelname} " + reset +  "{message}",
-        logging.WARNING: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_yellow + "{levelname} " + reset +  "{message}",
-        logging.ERROR: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_red + "{levelname} " + reset +  "{message}",
-        logging.CRITICAL: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_red + "{levelname} " + reset +  "{message}"
+        logging.DEBUG: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_blue + "{levelname} " + reset + "{message}",
+        logging.INFO: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_white + "{levelname} " + reset + "{message}",
+        logging.WARNING: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_yellow + "{levelname} " + reset + "{message}",
+        logging.ERROR: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_red + "{levelname} " + reset + "{message}",
+        logging.CRITICAL: green + "{asctime} " + reset + blue + "{name}[{task_name}] " + reset + bold_red + "{levelname} " + reset + "{message}"
     }
 
     def format(self, record):
@@ -87,6 +87,7 @@ class Logger:
         self.logger.addHandler(handler)
         self.logger.propagate = False
         self.logger.addFilter(TaskNameFilter())
+        self.debug(f"Logger initialized for {name}")
 
     def debug(self, msg, task_name=None):
         """

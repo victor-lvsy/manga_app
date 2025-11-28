@@ -19,6 +19,7 @@ class VRFGeneratorError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
 
+
 class VRFGenerator:
     """Generates VRF tokens by intercepting AJAX requests using Playwright"""
 
@@ -245,7 +246,6 @@ class VRFGenerator:
                 logger.debug(f"denied (image): {url}")  # pylint: disable=W1203
                 await route.abort()
                 return
-
 
             # For chapter pages: (like Kotlin lines 304-318)
             # If host == "mangafire.to" && path contains "ajax/read":

@@ -71,7 +71,6 @@ class ChapterRepository:
             .limit(1)
         ).first()
 
-
     def get_next_chapter(self, chapter: Chapter) -> Chapter | None:
         """TODO"""
         return self.session.exec(

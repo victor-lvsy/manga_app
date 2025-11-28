@@ -6,3 +6,4 @@ __pycache__/
 .pylintrc
 Pipfile.lock
 Pipfile
+local_comics/

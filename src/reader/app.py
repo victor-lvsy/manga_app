@@ -9,6 +9,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette import status as starlette_status
 from starlette.responses import RedirectResponse
 
+from src.config import RUN_MODE
 from src.logger import Logger
 from src.reader.routers import auth, library, manga, chapter, add_manga, admin, images
 from src.reader.context_manager import get_context_manager
@@ -23,7 +24,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """Middleware to check authentication for protected routes"""
     async def dispatch(self, request, call_next):
         # Allow access to login, logout, and static files without authentication
-        request.scope["scheme"] = "https"
+        if RUN_MODE == "dev":
+            request.scope["scheme"] = "http"
+        else:
+            request.scope["scheme"] = "https"
         if (request.url.path.startswith("/static")
                 or request.url.path == "/login"
                 or request.url.path == "/logout"):
@@ -42,8 +46,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         return await call_next(request)
 
+
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(application: FastAPI):
     """Lifespan for the application"""
     yield
     get_context_manager().cleanup()
@@ -70,4 +75,8 @@ app.include_router(images.router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8888, proxy_headers=True, forwarded_allow_ips="*", log_level="error")
+
+    if RUN_MODE == "dev":
+        uvicorn.run(app, host="0.0.0.0", port=8888)
+    else:
+        uvicorn.run(app, host="0.0.0.0", port=8888, log_level="error")

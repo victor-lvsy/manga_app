@@ -1,5 +1,4 @@
 """TODO"""
-import os
 from urllib.parse import urljoin
 from typing import List, Tuple
 
@@ -8,7 +7,7 @@ import bs4
 
 from src.logger import Logger
 from src.db import ScanlationGroup, Comic
-from .base import BaseScraper, LOCAL_FOLDER
+from .base import BaseScraper
 from .ssl import SSLChecker
 from .vrf_generator import VRFGenerator, VRFGeneratorError
 

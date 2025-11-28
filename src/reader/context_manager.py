@@ -7,6 +7,7 @@ from src.logger import Logger
 
 logger = Logger("context_manager")
 
+
 class ContextManager:
     """Context manager for the reader"""
     def __init__(self):
@@ -36,7 +37,9 @@ class ContextManager:
         self.active_tasks = set[asyncio.Task]()
         logger.debug(f"Context manager cleaned up, uptime: {self.uptime()}")
 
+
 global_context_manager = ContextManager()
+
 
 def get_context_manager():
     """Get the context manager"""

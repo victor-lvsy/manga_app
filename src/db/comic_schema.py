@@ -44,6 +44,7 @@ class UpdateStatus(str, Enum):
     SUCCESS = "success"
     FAILED = "failed"
 
+
 class Page(SQLModel, table=True):
     """TODO"""
     __tablename__ = "Page"
