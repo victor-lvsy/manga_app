@@ -31,6 +31,19 @@
         </figure>
     {% endfor %}
 </div>
+<div class="toolbar toolbar-bottom">
+    {% if prev_chapter %}
+        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=prev_chapter) }}" class="prev-chapter">&larr; Prev</a>
+    {% else %}
+        <span class="disabled">&larr; Prev</span>
+    {% endif %}
+    <a href="/manga/{{ manga_id }}" class="manga-index">Index</a>
+    {% if next_chapter %}
+        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=next_chapter) }}" class="next-chapter">Next &rarr;</a>
+    {% else %}
+        <span class="disabled">Next &rarr;</span>
+    {% endif %}
+</div>
 
 <!-- Chapter-specific JavaScript -->
 <script>
