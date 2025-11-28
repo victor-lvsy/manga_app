@@ -12,8 +12,15 @@
         logger = Logger(__name__)
         logger.dev("This is a developer level message.")
 """
+import sys
 import logging
 import asyncio
+
+
+if sys.argv[1] == "dev":
+    log_level = logging.DEBUG
+else:
+    log_level = logging.INFO
 
 
 class TaskNameFilter(logging.Filter):
@@ -24,7 +31,7 @@ class TaskNameFilter(logging.Filter):
         try:
             task = asyncio.current_task()
             if task:
-                record.task_name = task.get_name()
+                record.task_name = task.get_name()[:9]
             else:
                 record.task_name = "Main"
         except RuntimeError:
@@ -78,7 +85,7 @@ class Logger:
     :param level: The logging level threshold. Defaults to logging.INFO.
     :type level: int
     """
-    def __init__(self, name, level=logging.DEBUG):
+    def __init__(self, name, level=log_level):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
         fmt = CustomFormatter()

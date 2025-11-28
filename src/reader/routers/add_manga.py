@@ -2,7 +2,6 @@
 from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from src.logger import Logger
-from src.reader.context_manager import get_context_manager
 
 from src.reader.dependencies import get_current_user, get_comic_repository
 from src.db import User, ComicRepository
@@ -20,8 +19,6 @@ SCRAPER_FACTORIES: dict[ScanlationGroup, type[BaseScraper]] = {
     ScanlationGroup.ASURA_SCANS: AsuraScansScraper,
     ScanlationGroup.MANGA_FIRE: MangaFireToScraper,
 }
-
-context_manager = get_context_manager()
 
 
 def add_manga_context(request: Request, feedback: dict | None = None, tag_feedback: dict | None = None):
@@ -68,6 +65,11 @@ async def validate_manga_url(
 
     try:
         with scraper_factory() as scraper:
+            if scraper.host not in url:
+                return JSONResponse(
+                    status_code=400,
+                    content={"valid": False, "chapter_count": 0, "error": "URL invalide"}
+                )
             is_valid, chapter_count, error_message = scraper.validate_url_and_get_chapter_count(url)
             if is_valid:
                 return JSONResponse(
@@ -99,6 +101,7 @@ async def create_manga(
     tags: str = Form(""),
 ):
     """Crée un nouveau manga sans chapitres"""
+    logger.info(f"Creating comic {name} from user {current_user.username}")
     try:
         scanlation = ScanlationGroup(scanlation_group)
         comic_type_value = ComicType(comic_type)
@@ -138,7 +141,6 @@ async def create_manga(
         return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
 
     try:
-        logger.debug("Création du manga...")
         with scraper_factory() as scraper:
             comic = scraper.create_comic(
                 comic_name=name,
@@ -169,6 +171,7 @@ async def create_tag(
     current_user: User = Depends(get_current_user),
 ):
     """Ajoute un nouveau tag disponible pour les mangas"""
+    logger.info(f"Creating tag {new_tag} from user {current_user.username}")
     candidate = new_tag.strip()
     if not candidate:
         tag_feedback = {"type": "error", "message": "Le tag ne peut pas être vide."}
@@ -182,4 +185,3 @@ async def create_tag(
     add_tag(candidate)
     tag_feedback = {"type": "success", "message": f'Tag "{candidate}" ajouté avec succès.'}
     return templates.TemplateResponse("add_manga.html", add_manga_context(request, tag_feedback=tag_feedback))
-

@@ -9,6 +9,7 @@ from src.logger import Logger
 
 logger = Logger("ssl_checker")
 
+
 class SSLChecker:
     """TODO"""
     def __init__(self):

@@ -19,6 +19,9 @@ logger = Logger("admin")
 router = APIRouter()
 
 
+context_manager = get_context_manager()
+
+
 @router.get("/admin", response_class=HTMLResponse, name="admin_page")
 async def admin_page(
     request: Request,
@@ -28,7 +31,6 @@ async def admin_page(
 ):
     """Display admin page with user management"""
     users = user_repo.session.exec(select(User)).all()
-    context_manager = get_context_manager()
     # Pass the server start timestamp for real-time client-side updates
     server_start_timestamp = context_manager.start_time
 
@@ -51,6 +53,7 @@ async def admin_create_user(
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Create a new user (admin only)"""
+    logger.info(f"Creating user {username} from user {current_user.username}")
     try:
         user_role = UserRole(role)
     except ValueError:
@@ -100,6 +103,7 @@ async def admin_promote_user(
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Promote a user to admin (admin only)"""
+    logger.info(f"Promoting user {user_id} from user {current_user.username}")
     user = user_repo.get_user(user_id)
     if not user:
         users = user_repo.session.exec(select(User)).all()
@@ -132,6 +136,7 @@ async def admin_demote_user(
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Demote an admin to reader (admin only)"""
+    logger.info(f"Demoting user {user_id} from user {current_user.username}")
     user = user_repo.get_user(user_id)
     if not user:
         users = user_repo.session.exec(select(User)).all()
@@ -174,6 +179,7 @@ async def admin_delete_user(
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Delete a user (admin only)"""
+    logger.info(f"Deleting user {user_id} from user {current_user.username}")
     user = user_repo.get_user(user_id)
     if not user:
         users = user_repo.session.exec(select(User)).all()
@@ -221,6 +227,7 @@ async def admin_update_all_mangas(
     comic_repo: ComicRepository = Depends(get_comic_repository),
 ):
     """Search for new chapters for all mangas (admin only)"""
+    logger.info(f"Updating all mangas from user {current_user.username}")
     try:
         manga_updater = MangaUpdater(comic_repo)
         get_context_manager().add_task(asyncio.create_task(manga_updater.force_global_update()))
@@ -232,7 +239,7 @@ async def admin_update_all_mangas(
             "current_user": current_user,
             "update_feedback": {
                 "type": "success",
-                "message": f"Mise à jour lancée !"
+                "message": "Mise à jour lancée !"
             },
         })
     except Exception as exc:  # pylint: disable=broad-except
@@ -247,4 +254,3 @@ async def admin_update_all_mangas(
                 "message": f"Erreur lors de la mise à jour de tous les mangas : {exc}"
             },
         })
-

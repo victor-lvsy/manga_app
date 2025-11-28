@@ -28,7 +28,7 @@ async def view_chapter(
     page_repo: PageRepository = Depends(get_page_repository),
 ):
     """TODO"""
-
+    logger.debug(f"Viewing chapter {chapter_number} of manga {manga_id} from user {current_user.username}")
     chapter = comic_repo.get_chapter_by_number(int(manga_id), float(chapter_number))
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
@@ -65,6 +65,7 @@ async def delete_chapter(
     chapter_repo: ChapterRepository = Depends(get_chapter_repository),
 ):
     """Delete a chapter (admin only)"""
+    logger.info(f"Deleting chapter {chapter_number} of manga {manga_id} from user {current_user.username}")
     chapter = comic_repo.get_chapter_by_number(int(manga_id), float(chapter_number))
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
@@ -93,6 +94,7 @@ async def blacklist_delete_chapter(
     chapter_repo: ChapterRepository = Depends(get_chapter_repository),
 ):
     """Blacklist and delete a chapter (admin only)"""
+    logger.info(f"Blacklisting and deleting chapter {chapter_number} of manga {manga_id} from user {current_user.username}")
     chapter = comic_repo.get_chapter_by_number(int(manga_id), float(chapter_number))
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
@@ -113,4 +115,3 @@ async def blacklist_delete_chapter(
             status_code=500,
             detail=f"Error blacklisting and deleting chapter: {exc}",
         ) from exc
-

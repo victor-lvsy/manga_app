@@ -12,9 +12,11 @@ from src.db import (
     User,
     UserRole,
 )
+from src.reader.context_manager import get_context_manager
 
 # Initialize database access layer
 db_layer = DatabaseAccessLayer()
+context_manager = get_context_manager()
 
 
 def get_db_session():
@@ -64,6 +66,7 @@ async def get_current_user(
             detail="User not found",
         )
 
+    context_manager.user_interaction(user.id)
     return user
 
 
@@ -76,5 +79,5 @@ async def get_admin_user(
             status_code=starlette_status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
         )
+    context_manager.user_interaction(current_user.id)
     return current_user
-

@@ -4,10 +4,15 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette import status as starlette_status
 import bcrypt
 
+from src.reader.context_manager import get_context_manager
 from src.reader.dependencies import get_user_repository, UserRepository
 from src.reader.templates import templates
+from src.logger import Logger
 
+logger = Logger("auth")
 router = APIRouter()
+
+context_manager = get_context_manager()
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -27,6 +32,7 @@ async def login(
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Handle login"""
+    logger.info(f"Logging in user {username}")
     user = user_repo.get_user_by_username(username)
 
     if not user:
@@ -59,6 +65,7 @@ async def login(
 
     # Set session
     request.session["user_id"] = user.id
+    context_manager.user_interaction(user.id)
 
     # Redirect to home page
     return RedirectResponse(
@@ -70,9 +77,10 @@ async def login(
 @router.get("/logout", response_class=HTMLResponse)
 async def logout(request: Request):
     """Handle logout"""
+    context_manager.remove_user(request.session.get('user_id'))
+    logger.info(f"Logging out user {request.session.get('user_id')}")
     request.session.clear()
     return RedirectResponse(
         url=request.url_for("login_page"),
         status_code=starlette_status.HTTP_303_SEE_OTHER,
     )
-

@@ -4,6 +4,7 @@ import random
 from typing import Optional
 from urllib.parse import urlparse, parse_qs
 
+from src.reader.context_manager import get_context_manager
 from src.logger import Logger
 try:
     from playwright.async_api import async_playwright, Browser, Page, Route
@@ -453,13 +454,17 @@ class VRFGenerator:
                 loop.run_until_complete(self.close())
         except RuntimeError:
             # No event loop, create one
-            asyncio.run(self.close())
+            get_context_manager().add_task(asyncio.create_task(self.close()))
+        except Exception as e:
+            logger.error(f"Error closing VRF generator: {e}")
+            raise
         return False
 
     # Synchronous wrappers for async methods
     def get_chapter_vrf(self, chapter_url: str) -> str:
         """Synchronous wrapper for get_chapter_vrf_async"""
-        return asyncio.run(self.get_chapter_vrf_async(chapter_url))
+        loop = asyncio.get_event_loop()
+        return get_context_manager().add_task(loop.create_task(self.get_chapter_vrf_async(chapter_url)))
 
     def get_chapter_vrf_sync(self, chapter_url: str) -> str:
         """Alias for get_chapter_vrf (for compatibility)"""

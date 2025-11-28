@@ -77,6 +77,6 @@ if __name__ == "__main__":
     import uvicorn
 
     if RUN_MODE == "dev":
-        uvicorn.run(app, host="0.0.0.0", port=8888)
+        uvicorn.run(app, host="0.0.0.0", port=8888, log_level="error")
     else:
         uvicorn.run(app, host="0.0.0.0", port=8888, log_level="error")

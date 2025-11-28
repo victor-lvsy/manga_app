@@ -6,7 +6,9 @@ from src.reader.dependencies import get_current_user, get_comic_repository, get_
 from src.db import User, ComicRepository, UserRepository
 from src.reader.templates import templates
 from src.db.tags import get_tags
+from src.logger import Logger
 
+logger = Logger("library")
 router = APIRouter()
 
 
@@ -18,6 +20,7 @@ async def acceuil(
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Affiche la page d'accueil avec trois listes de mangas"""
+    logger.debug(f"Displaying home page for user {current_user.username}")
     all_comics = comic_repo.get_comics()
 
     # Helper function to format manga data
@@ -73,6 +76,7 @@ async def library(
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Affiche la bibliothèque des mangas"""
+    logger.debug(f"Displaying library page for user {current_user.username}")
     comics = comic_repo.get_comics()
     comics_sorted = sorted(
         comics,
@@ -96,4 +100,3 @@ async def library(
         "mangas": mangas_with_follow_status,
         "available_tags": get_tags(),
     })
-

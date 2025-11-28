@@ -1,7 +1,7 @@
 """Manga-related routes"""
 import asyncio
 from pathlib import Path
-from fastapi import APIRouter, Request, Depends, Query, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, JSONResponse
 from src.logger import Logger
 from src.reader.context_manager import get_context_manager
@@ -38,6 +38,7 @@ async def manga_detail(
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Affiche les détails d'un manga spécifique"""
+    logger.debug(f"Displaying manga {manga_id} for user {current_user.username}")
     comic = comic_repo.get_comic(int(manga_id))
     if not comic:
         raise HTTPException(status_code=404, detail="Manga not found")
@@ -64,6 +65,7 @@ async def toggle_follow_manga(
     comic_repo: ComicRepository = Depends(get_comic_repository),
 ):
     """Toggle follow/unfollow a manga"""
+    logger.info(f"Toggling follow/unfollow for manga {manga_id} from user {current_user.username}")
     comic = comic_repo.get_comic(int(manga_id))
     if not comic:
         raise HTTPException(status_code=404, detail="Manga not found")
@@ -89,6 +91,7 @@ async def force_update_manga(
     comic_repo: ComicRepository = Depends(get_comic_repository),
 ):
     """Force la mise à jour des chapitres d'un manga"""
+    logger.info(f"Force updating manga {manga_id} from user {current_user.username}")
     comic = comic_repo.get_comic(int(manga_id))
     if not comic:
         raise HTTPException(status_code=404, detail="Manga not found")
@@ -175,4 +178,3 @@ async def serve_cover(
         raise HTTPException(status_code=404, detail="Cover not found")
 
     return FileResponse(cover_path)
-
