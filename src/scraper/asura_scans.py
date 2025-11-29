@@ -42,6 +42,10 @@ class AsuraScansScraper(BaseScraper):
         logger.debug("Getting comic cover, Downloading...")
         images = soup.find_all("img")
         cover_url = next((image.get("src") for image in images if image.get("alt") == "poster"), None)
+        print(cover_url)
+        if not cover_url:
+            for image in images:
+                print(image)
         response = self._get_from_url(cover_url)
         return response.content, cover_url
 

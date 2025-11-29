@@ -170,7 +170,7 @@ async def serve_cover(
         raise HTTPException(status_code=404, detail="Manga not found")
 
     # Try different cover file extensions
-    cover_extensions = [".webp", ".jpg", ".jpeg", ".png"]
+    cover_extensions = [".webp", ".jpg", ".jpeg", ".png", ".gif"]
     cover_path = None
 
     for ext in cover_extensions:

@@ -265,3 +265,12 @@ class BaseScraper:
         elif cover_url.endswith(".jpeg"):
             with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.jpeg"), "wb") as f:
                 f.write(cover_content)
+        elif cover_url.endswith(".png"):
+            with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.png"), "wb") as f:
+                f.write(cover_content)
+        elif cover_url.endswith(".gif"):
+            with open(os.path.join(LOCAL_FOLDER, comic.local_path, "cover.gif"), "wb") as f:
+                f.write(cover_content)
+        else:
+            logger.error(f"Unsupported image format: {cover_url}")  # pylint: disable=logging-fstring-interpolation
+            raise ValueError(f"Unsupported image format: {cover_url}")
