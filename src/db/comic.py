@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from src.logger import Logger
-from .comic_schema import Comic, Chapter, Status, ScanlationGroup, ComicType, UpdateStatus, ComicTagLink
+from .comic_schema import Comic, Chapter, Status, ScanlationGroup, ComicType, UpdateStatus, ComicTagLink, Tag
 
 logger = Logger("comic")
 
@@ -96,28 +96,14 @@ class ComicRepository:
         chapter = self.session.exec(select(Chapter).where(Chapter.comic_id == comic_id, Chapter.number == chapter_number)).first()
         return chapter
 
-    def update_comic_tags(self, comic_id: int, tags: list[str]):
-        """TODO"""
-        try:
-            comic = self.get_comic(comic_id)
-            comic.tags = tags
-            self.session.add(comic)
-            self.session.commit()
-            self.session.refresh(comic)
-            logger.debug(f"Comic tags updated: {comic.name}, tags: {tags}")  # pylint: disable=logging-fstring-interpolation
-            return comic
-        except IntegrityError as e:
-            self.session.rollback()
-            raise e
-
-    def filter_comics(self, tags: list[str] | None = None, comic_type: ComicType | None = None) -> list[Comic]:
+    def filter_comics(self, _tags: list[str] | None = None, comic_type: ComicType | None = None) -> list[Comic]:
         """TODO"""
         if comic_type:
             comic_type_query = Comic.comic_type == comic_type
         else:
             comic_type_query = True
-        if tags:
-            return self.session.exec(select(Comic).where(comic_type_query).filter(Comic.tags.contains(tags))).all()  # pylint: disable=no-member
+        # if tags:
+        #     return self.session.exec(select(Comic).where(comic_type_query).filter(Comic.tags.contains(tags))).all()  # pylint: disable=no-member
         return self.session.exec(select(Comic).where(comic_type_query)).all()
 
     def add_blacklist_chapter(self, comic_id: int, chapter_number: float):
@@ -165,10 +151,32 @@ class ComicRepository:
             self.session.rollback()
             raise e
 
-    def prepare_tags_for_migration(self):
+    def create_tag(self, name: str):
         """TODO"""
-        comics_tags = []
-        for comic in self.get_comics():
-            comics_tags.append({"comic_id": comic.id, "tags": comic.tags})
-        with open("src/db/tags.json", "w", encoding="utf-8") as file:
-            json.dump(comics_tags, file, indent=4, ensure_ascii=False)
+        try:
+            tag = Tag(name=name)
+            self.session.add(tag)
+            self.session.commit()
+            self.session.refresh(tag)
+            logger.debug(f"Tag created: {tag.name}")  # pylint: disable=logging-fstring-interpolation
+            return tag
+        except IntegrityError as e:
+            self.session.rollback()
+            raise e
+
+    def get_tag_by_name(self, name: str) -> Tag | None:
+        """TODO"""
+        return self.session.exec(select(Tag).where(Tag.name == name)).first()
+
+    def create_comic_tag_link(self, comic_id: int, tag_id: int):
+        """TODO"""
+        try:
+            comic_tag_link = ComicTagLink(comic_id=comic_id, tag_id=tag_id)
+            self.session.add(comic_tag_link)
+            self.session.commit()
+            self.session.refresh(comic_tag_link)
+            logger.debug(f"Comic tag link created: {comic_id} - {tag_id}")  # pylint: disable=logging-fstring-interpolation
+            return comic_tag_link
+        except IntegrityError as e:
+            self.session.rollback()
+            raise e
