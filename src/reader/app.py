@@ -48,7 +48,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
 
 @asynccontextmanager
-async def lifespan(application: FastAPI):
+async def lifespan(_application: FastAPI):
     """Lifespan for the application"""
     context_manager = get_context_manager()
     context_manager.start()

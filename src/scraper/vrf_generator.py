@@ -12,7 +12,7 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
-logger = Logger("vrf_generator")
+logger = Logger("vrf-generator")
 
 
 class VRFGeneratorError(Exception):

@@ -72,6 +72,15 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
+class CustomLogLevels:
+    """
+    Custom Log Levels
+    """
+
+    DEBUG = ["worker_context"]
+    INFO = ["config", "db-access-layer", "vrf-generator"]
+
+
 class Logger:
     """
     Custom Logger Wrapper
@@ -87,6 +96,11 @@ class Logger:
     """
     def __init__(self, name, level=log_level):
         self.logger = logging.getLogger(name)
+        if name in CustomLogLevels.DEBUG:
+            level = logging.DEBUG
+        elif name in CustomLogLevels.INFO:
+            print(f"Setting level to INFO for {name}")
+            level = logging.INFO
         self.logger.setLevel(level)
         fmt = CustomFormatter()
         handler = logging.StreamHandler()
