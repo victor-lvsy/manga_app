@@ -6,11 +6,12 @@ from typing import Tuple
 from datetime import datetime
 import bs4
 
-from src.logger import Logger
 import requests
 from requests.adapters import HTTPAdapter, Retry
 import certifi
 
+
+from src.logger import Logger
 from src.db import (
     DatabaseAccessLayer,
     UserRepository,
@@ -27,7 +28,7 @@ from src.db import (
 )
 from src.config import LOCAL_FOLDER
 
-logger = Logger("base")
+logger = Logger("base_scraper")
 
 
 def validate_url(url: str) -> str:
@@ -178,7 +179,7 @@ class BaseScraper:
         tags: list[str] | None = None,
     ):
         """TODO"""
-        comic_folder_name = comic_name.replace(" ", "_").lower()
+        comic_folder_name = comic_name.replace(" ", "_"). replace("\'", " ").lower()
         self.create_comic_folder(comic_folder_name)
         comic = Comic(
             name=comic_name,
@@ -252,7 +253,7 @@ class BaseScraper:
 
     def check_if_comic_cover_exists(self, comic: Comic) -> bool:
         """TODO"""
-        return any(os.path.exists(os.path.join(LOCAL_FOLDER, comic.local_path, f"cover.{ext}")) for ext in ["webp", "jpg", "jpeg", "png"])
+        return any(os.path.exists(os.path.join(LOCAL_FOLDER, comic.local_path, f"cover.{ext}")) for ext in ["webp", "jpg", "jpeg", "png", "gif"])
 
     def save_comic_cover(self, comic: Comic, cover_content: bytes, cover_url: str):
         """TODO"""

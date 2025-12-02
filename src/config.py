@@ -6,7 +6,7 @@ logger = Logger("config")
 
 if len(sys.argv) > 1 and sys.argv[1] == "dev":
     logger.info("Running in development mode")
-    LOCAL_FOLDER = "/home/victor/Documents/manga_scraper/local_comics"
+    LOCAL_FOLDER = "/app/local_comics"
     RUN_MODE = "dev"
 elif len(sys.argv) > 1 and sys.argv[1] == "prod":
     logger.info("Running in production mode")

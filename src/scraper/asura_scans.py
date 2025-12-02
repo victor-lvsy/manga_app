@@ -55,7 +55,7 @@ class AsuraScansScraper(BaseScraper):
             soup = bs4.BeautifulSoup(response.content, "html.parser")
             chapter_links = self.get_chapter_links(soup)
             chapters = self.extract_chapters(chapter_links)
-            return True, len(chapters), ""
+            return True, len(list(set(chapters))), ""
         except Exception as e:  # pylint: disable=broad-except
             return False, 0, str(e)
 

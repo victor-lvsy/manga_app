@@ -29,9 +29,9 @@ class MangaFireToScraper(BaseScraper):
         super().__enter__()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, exc_type, exc_value, traceback):
         super().__exit__(exc_type, exc_value, traceback)
-        self.vrf_generator.close()
+        await self.vrf_generator.close()
 
     async def get_img_list(
             self, chapter_number: int, chapter_url: str, hl: str

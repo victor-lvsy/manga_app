@@ -1,0 +1,72 @@
+networks:
+  manga_network:
+    driver: bridge
+
+services:
+  mysql:
+    image: mysql:8.4.7
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=pwd
+      - MYSQL_DATABASE=manga_reader
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 2s
+      retries: 10
+    restart: always
+    networks:
+      - manga_network
+
+  reader:
+    build:
+      context: .
+      dockerfile: Dockerfile.reader
+    container_name: manga_reader
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=pwd
+      - DB_NAME=manga_reader
+      - RUN_MODE=dev
+      - LOCAL_FOLDER=/app/local_comics
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+    volumes:
+      - ./local_comics:/app/local_comics
+    ports:
+      - "8888:8888"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: always
+
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile.scraper
+      args:
+      - ENVIRONMENT=dev
+    container_name: manga_scraper
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=scraper_user
+      - DB_PASSWORD=scraperpassword
+      - DB_NAME=manga_reader
+      - RUN_MODE=dev
+      - LOCAL_FOLDER=/app/local_comics
+      - SCRAPER_API_PORT=8810
+    volumes:
+      - ./local_comics:/app/local_comics
+    ports:
+      - "8810:8810"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: always
+    networks:
+      - manga_network

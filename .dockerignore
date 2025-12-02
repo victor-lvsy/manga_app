@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.venv
+venv
+env
+ENV
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Local files
+local_comics/
+*.log
+output.txt
+
+# Documentation
+*.md
+!README.md
+
+# Other
+.DS_Store
+.env.local
+.env.*.local
+

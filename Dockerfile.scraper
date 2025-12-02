@@ -1,0 +1,57 @@
+FROM python:3.12-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN useradd -m appuser
+WORKDIR /home/appuser
+
+ENV PATH="/root/.local/bin:${PATH}"
+ENV PATH="/home/appuser/.local/bin:${PATH}"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libatspi2.0-0 \
+    libpango1.0-0 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libgtk-3-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+
+USER appuser
+
+# Copy requirements file
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN playwright install
+
+# Copy application code
+COPY src/ ./src/
+COPY src/scraper/start.sh .
+
+USER root
+RUN chmod +x /home/appuser/src/scraper/start.sh
+ARG ENVIRONMENT=NO_VALUE
+RUN [ ! "${ENVIRONMENT}" = "NO_VALUE" ]
+ENV ENVIRONMENT=${ENVIRONMENT}
+RUN echo "ENVIRONMENT=${ENVIRONMENT}"
+
+EXPOSE 8810
+
+# Run the scraper API
+USER appuser
+
+CMD ["/home/appuser/src/scraper/start.sh"]

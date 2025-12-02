@@ -1,4 +1,5 @@
 """Database access layer for managing SQL database connections and sessions."""
+import os
 from contextlib import contextmanager
 from sqlmodel import SQLModel, create_engine, Session
 # from sqlalchemy import event
@@ -14,11 +15,11 @@ class DatabaseAccessLayer:
     def __init__(self):
         """Initialize the database connection with environment variables."""
         logger.debug("Initializing database connection")
-        self.username = "root"
-        self.password = "pwd"
-        self.host = "localhost"
-        self.port = 3306  # Default MySQL port
-        self.db_name = "manga_reader"
+        self.username = os.getenv("DB_USERNAME", "root")
+        self.password = os.getenv("DB_PASSWORD", "pwd")
+        self.host = os.getenv("DB_HOST", "localhost")
+        self.port = int(os.getenv("DB_PORT", "3306"))
+        self.db_name = os.getenv("DB_NAME", "manga_reader")
 
         self.url = f'mysql+pymysql://{self.username}:{self.password}@{self.host}:{self.port}/{self.db_name}'
         self.engine = create_engine(
