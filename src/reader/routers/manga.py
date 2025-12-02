@@ -26,7 +26,7 @@ def list_chapters(comic, comic_repo: ComicRepository):
     chapters = comic_repo.get_comic_chapters(comic.id)
     # Sort chapters by number and return relative paths
     sorted_chapters = sorted(chapters, key=lambda chap: chap.number)
-    return [f"{c.number}".rstrip("0").rstrip(".") for c in sorted_chapters]
+    return [f'{float(c.number):g}' for c in sorted_chapters]
 
 
 @router.get("/manga/{manga_id}", response_class=HTMLResponse)
@@ -49,7 +49,7 @@ async def manga_detail(
     # Get read chapters for the user
     read_chapters = user_repo.get_user_read_chapters(current_user.id, comic.id)
     # Format chapter numbers to match the format used in list_chapters
-    read_chapter_numbers = {f"{ch.number}".rstrip("0").rstrip(".") for ch in read_chapters}
+    read_chapter_numbers = {f'{float(ch.number):g}' for ch in read_chapters}
 
     return templates.TemplateResponse("manga_index.html", {
         "request": request,

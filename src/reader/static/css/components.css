@@ -325,6 +325,10 @@
     backdrop-filter: blur(6px);
 }
 
+.manga-chapter-info.mobile-only {
+    display: none;
+}
+
 .toolbar a,
 .toolbar .disabled {
     color: var(--text-secondary);
@@ -422,15 +426,83 @@
 /* Mobile Chapter Viewer */
 @media (max-width: 768px) {
     .toolbar {
-        padding: 8px 10px;
-        gap: 12px;
+        padding: 12px 10px;
+        flex-direction: row;
         flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .manga-chapter-info.desktop-only,
+    .toolbar > .desktop-only {
+        display: none !important;
+    }
+
+    .manga-chapter-info.mobile-only {
+        display: block !important;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1rem;
+        padding: 8px 0;
+        order: -1 !important;
+        width: 100%;
+        flex-basis: 100%;
+    }
+
+    .mobile-nav-wrapper {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        order: 0;
+        flex: 0 0 auto;
+    }
+
+    .mobile-nav-wrapper a,
+    .mobile-nav-wrapper .disabled {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    .toolbar-admin-buttons {
+        order: 0;
+        justify-content: center;
+        margin-left: 0 !important;
+        flex: 0 0 auto;
+        margin-top: 0;
+        gap: 6px;
     }
 
     .toolbar a,
     .toolbar .disabled {
-        padding: 6px 10px;
+        padding: 8px 12px;
         font-size: 0.9rem;
+        transition: none !important;
+    }
+
+    .toolbar a:hover {
+        color: var(--text-secondary) !important;
+        background: transparent !important;
+    }
+
+    .prev-chapter::before,
+    .next-chapter::before {
+        display: none !important;
+    }
+
+    .toolbar-admin-buttons form {
+        display: inline;
+    }
+
+    .toolbar-admin-buttons button {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        transition: none !important;
+    }
+
+    .toolbar-admin-buttons button:hover {
+        transform: none !important;
+        box-shadow: none !important;
     }
 
     .chapter-container {

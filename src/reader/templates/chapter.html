@@ -2,19 +2,34 @@
 {% block title %}{{ chapter }} - MangaReader{% endblock %}
 {% block body %}
 <div class="toolbar">
+    <span class="mobile-nav-wrapper mobile-only">
+        {% if prev_chapter %}
+            <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=prev_chapter) }}" class="prev-chapter">&larr; Prev</a>
+        {% else %}
+            <span class="disabled">&larr; Prev</span>
+        {% endif %}
+        <a href="/manga/{{ manga_id }}" class="manga-index">Index</a>
+        {% if next_chapter %}
+            <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=next_chapter) }}" class="next-chapter">Next &rarr;</a>
+        {% else %}
+            <span class="disabled">Next &rarr;</span>
+        {% endif %}
+    </span>
     {% if prev_chapter %}
-        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=prev_chapter) }}" class="prev-chapter">&larr; Prev</a>
+        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=prev_chapter) }}" class="prev-chapter desktop-only">&larr; Prev</a>
     {% else %}
-        <span class="disabled">&larr; Prev</span>
+        <span class="disabled desktop-only">&larr; Prev</span>
     {% endif %}
-    <a href="/manga/{{ manga_id }}" class="manga-index">Index</a>
+    <a href="/manga/{{ manga_id }}" class="manga-index desktop-only">Index</a>
     {% if next_chapter %}
-        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=next_chapter) }}" class="next-chapter">Next &rarr;</a>
+        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=next_chapter) }}" class="next-chapter desktop-only">Next &rarr;</a>
     {% else %}
-        <span class="disabled">Next &rarr;</span>
+        <span class="disabled desktop-only">Next &rarr;</span>
     {% endif %}
+    <span class="manga-chapter-info desktop-only" style="flex: 1; text-align: center; font-weight: bold;">{{ manga_name }} - Chapter {{ chapter }}</span>
+    <span class="manga-chapter-info mobile-only">{{ manga_name }} - Chapter {{ chapter }}</span>
     {% if current_user and current_user.role.value == 'admin' %}
-        <div style="display: flex; gap: 8px; margin-left: auto;">
+        <div class="toolbar-admin-buttons" style="display: flex; gap: 8px; margin-left: auto;">
             <form method="post" action="{{ request.url_for('blacklist_delete_chapter', manga_id=manga_id, chapter_number=chapter) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir blacklister et supprimer ce chapitre ? Cette action est irréversible.');">
                 <button type="submit" class="blacklist-delete-chapter-btn" title="Blacklister et supprimer le chapitre">🚫 Blacklister</button>
             </form>
@@ -32,16 +47,41 @@
     {% endfor %}
 </div>
 <div class="toolbar toolbar-bottom">
+    <span class="mobile-nav-wrapper mobile-only">
+        {% if prev_chapter %}
+            <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=prev_chapter) }}" class="prev-chapter">&larr; Prev</a>
+        {% else %}
+            <span class="disabled">&larr; Prev</span>
+        {% endif %}
+        <a href="/manga/{{ manga_id }}" class="manga-index">Index</a>
+        {% if next_chapter %}
+            <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=next_chapter) }}" class="next-chapter">Next &rarr;</a>
+        {% else %}
+            <span class="disabled">Next &rarr;</span>
+        {% endif %}
+    </span>
     {% if prev_chapter %}
-        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=prev_chapter) }}" class="prev-chapter">&larr; Prev</a>
+        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=prev_chapter) }}" class="prev-chapter desktop-only">&larr; Prev</a>
     {% else %}
-        <span class="disabled">&larr; Prev</span>
+        <span class="disabled desktop-only">&larr; Prev</span>
     {% endif %}
-    <a href="/manga/{{ manga_id }}" class="manga-index">Index</a>
+    <a href="/manga/{{ manga_id }}" class="manga-index desktop-only">Index</a>
     {% if next_chapter %}
-        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=next_chapter) }}" class="next-chapter">Next &rarr;</a>
+        <a href="{{ request.url_for('view_chapter', manga_id=manga_id, chapter_number=next_chapter) }}" class="next-chapter desktop-only">Next &rarr;</a>
     {% else %}
-        <span class="disabled">Next &rarr;</span>
+        <span class="disabled desktop-only">Next &rarr;</span>
+    {% endif %}
+    <span class="manga-chapter-info desktop-only" style="flex: 1; text-align: center; font-weight: bold;">{{ manga_name }} - Chapter {{ chapter }}</span>
+    <span class="manga-chapter-info mobile-only">{{ manga_name }} - Chapter {{ chapter }}</span>
+    {% if current_user and current_user.role.value == 'admin' %}
+        <div class="toolbar-admin-buttons" style="display: flex; gap: 8px; margin-left: auto;">
+            <form method="post" action="{{ request.url_for('blacklist_delete_chapter', manga_id=manga_id, chapter_number=chapter) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir blacklister et supprimer ce chapitre ? Cette action est irréversible.');">
+                <button type="submit" class="blacklist-delete-chapter-btn" title="Blacklister et supprimer le chapitre">🚫 Blacklister</button>
+            </form>
+            <form method="post" action="{{ request.url_for('delete_chapter', manga_id=manga_id, chapter_number=chapter) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce chapitre ? Cette action est irréversible.');">
+                <button type="submit" class="delete-chapter-btn" title="Supprimer le chapitre">🗑️ Supprimer</button>
+            </form>
+        </div>
     {% endif %}
 </div>
 

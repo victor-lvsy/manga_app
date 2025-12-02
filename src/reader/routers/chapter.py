@@ -1,7 +1,7 @@
 """Chapter-related routes"""
+from typing import Union
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy.exc import IntegrityError
 from src.logger import Logger
 
 from src.reader.dependencies import (
@@ -23,11 +23,11 @@ router = APIRouter()
 async def view_chapter(
     request: Request,
     manga_id: str,
-    chapter_number: str,
+    chapter_number: Union[int, float],
     current_user: User = Depends(get_current_user),
     comic_repo: ComicRepository = Depends(get_comic_repository),
     chapter_repo: ChapterRepository = Depends(get_chapter_repository),
-    page_repo: PageRepository = Depends(get_page_repository),
+    _page_repo: PageRepository = Depends(get_page_repository),
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """TODO"""
@@ -37,11 +37,8 @@ async def view_chapter(
         raise HTTPException(status_code=404, detail="Chapter not found")
 
     # Mark chapter as read for the user
-    try:
+    if not user_repo.is_chapter_read(current_user.id, chapter.id):
         user_repo.user_mark_chapter_as_read(current_user.id, chapter.id)
-    except IntegrityError:
-        # Chapter already marked as read, which is fine
-        pass
 
     pages = [page.id for page in chapter_repo.get_chapter_pages(chapter.id)]
     if not pages:
@@ -55,11 +52,12 @@ async def view_chapter(
         {
             "request": request,
             "manga_id": manga_id,
-            "chapter": chapter.number,
+            "manga_name": chapter.comic.name,
+            "chapter": f'{float(chapter.number):g}',
             "chapter_id": chapter.id,
             "pages": pages,
-            "prev_chapter": prev_chapter.number if prev_chapter else None,
-            "next_chapter": next_chapter.number if next_chapter else None,
+            "prev_chapter": f'{float(prev_chapter.number):g}' if prev_chapter else None,
+            "next_chapter": f'{float(next_chapter.number):g}' if next_chapter else None,
             "current_user": current_user,
         },
     )
@@ -69,7 +67,7 @@ async def view_chapter(
 async def delete_chapter(
     request: Request,
     manga_id: str,
-    chapter_number: str,
+    chapter_number: Union[int, float],
     current_user: User = Depends(get_admin_user),
     comic_repo: ComicRepository = Depends(get_comic_repository),
     chapter_repo: ChapterRepository = Depends(get_chapter_repository),
@@ -98,7 +96,7 @@ async def delete_chapter(
 async def blacklist_delete_chapter(
     request: Request,
     manga_id: str,
-    chapter_number: str,
+    chapter_number: Union[int, float],
     current_user: User = Depends(get_admin_user),
     comic_repo: ComicRepository = Depends(get_comic_repository),
     chapter_repo: ChapterRepository = Depends(get_chapter_repository),

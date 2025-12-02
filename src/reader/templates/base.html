@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{% block title %}Manga Viewer{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ request.url_for('static', path='images/favicon.ico') }}">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/base.css') }}">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/layout.css') }}">
     <link rel="stylesheet" href="{{ request.url_for('static', path='css/nav.css') }}">

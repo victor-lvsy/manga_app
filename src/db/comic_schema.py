@@ -2,7 +2,7 @@
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional, TYPE_CHECKING, List
+from typing import Optional, TYPE_CHECKING, List
 from sqlmodel import SQLModel, Field, Relationship, Column
 from sqlalchemy import JSON
 
@@ -45,6 +45,22 @@ class UpdateStatus(str, Enum):
     FAILED = "failed"
 
 
+class ComicTagLink(SQLModel, table=True):
+    """TODO"""
+    __tablename__ = "ComicTagLink"
+    comic_id: int = Field(default=None, foreign_key="Comic.id", primary_key=True)
+    tag_id: int = Field(default=None, foreign_key="Tag.id", primary_key=True)
+
+
+class Tag(SQLModel, table=True):
+    """TODO"""
+    __tablename__ = "Tag"
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+
+    comics: list["Comic"] = Relationship(back_populates="tags", link_model=ComicTagLink)
+
+
 class Page(SQLModel, table=True):
     """TODO"""
     __tablename__ = "Page"
@@ -85,7 +101,7 @@ class Comic(SQLModel, table=True):
     comic_type: ComicType
     status: Status = Field(default=Status.ONGOING)
     update_frequency: UpdateFrequency = Field(default=UpdateFrequency.MONTHLY)
-    tags: List = Field(sa_column=Column(JSON), default_factory=list)
+    tags: list["Tag"] = Relationship(back_populates="comics", link_model=ComicTagLink)
     blacklist_chapters: List = Field(sa_column=Column[float](JSON), default_factory=list)
 
     chapters: list[Chapter] = Relationship(back_populates="comic", cascade_delete=True)
@@ -94,7 +110,7 @@ class Comic(SQLModel, table=True):
     def model_dump(self, *args, **kwargs):
         """TODO"""
         data = super().model_dump(*args, **kwargs)
-        data["update_status"] = self.update_status.value.replace("_", " ").title()
+        data["update_status"] = self.update_status.value.replace("_", " ").title()  # pylint: disable=no-member
         data["last_updated"] = self.last_updated.strftime("%d/%m/%y, %H:%M")
         data["scanlation_group"] = self.scanlation_group.value.replace("_", " ").title()
         data["comic_type"] = self.comic_type.value.replace("_", " ").title()

@@ -1,12 +1,11 @@
 """TODO"""
 from datetime import datetime
-from decimal import Decimal
-
+import json
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from src.logger import Logger
-from .comic_schema import Comic, Chapter, Status, ScanlationGroup, ComicType, UpdateStatus
+from .comic_schema import Comic, Chapter, Status, ScanlationGroup, ComicType, UpdateStatus, ComicTagLink
 
 logger = Logger("comic")
 
@@ -93,7 +92,7 @@ class ComicRepository:
 
     def get_chapter_by_number(self, comic_id: int, chapter_number: float) -> Chapter:
         """TODO"""
-        logger.debug(f"Getting chapter by number: {comic_id} - {chapter_number}")  # pylint: disable=logging-fstring-interpolation
+        logger.debug(f"Getting chapter by number: {comic_id} - {chapter_number:g}")  # pylint: disable=logging-fstring-interpolation
         chapter = self.session.exec(select(Chapter).where(Chapter.comic_id == comic_id, Chapter.number == chapter_number)).first()
         return chapter
 
@@ -165,3 +164,11 @@ class ComicRepository:
         except IntegrityError as e:
             self.session.rollback()
             raise e
+
+    def prepare_tags_for_migration(self):
+        """TODO"""
+        comics_tags = []
+        for comic in self.get_comics():
+            comics_tags.append({"comic_id": comic.id, "tags": comic.tags})
+        with open("src/db/tags.json", "w", encoding="utf-8") as file:
+            json.dump(comics_tags, file, indent=4, ensure_ascii=False)

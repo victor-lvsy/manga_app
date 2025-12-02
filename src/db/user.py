@@ -133,6 +133,10 @@ class UserRepository:
         self.session.commit()
         self.session.refresh(user)
 
+    def is_chapter_read(self, user_id: int, chapter_id: int) -> bool:
+        """Check if a chapter is read by a user"""
+        return self.session.exec(select(UserChapterLink).where(UserChapterLink.user_id == user_id, UserChapterLink.chapter_id == chapter_id)).first() is not None
+
 
 if __name__ == "__main__":
     from src.db.data_access_layer import DatabaseAccessLayer

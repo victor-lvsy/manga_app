@@ -99,7 +99,6 @@ class Logger:
         if name in CustomLogLevels.DEBUG:
             level = logging.DEBUG
         elif name in CustomLogLevels.INFO:
-            print(f"Setting level to INFO for {name}")
             level = logging.INFO
         self.logger.setLevel(level)
         fmt = CustomFormatter()
