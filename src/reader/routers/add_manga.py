@@ -1,6 +1,8 @@
 """Add manga routes"""
+import os
 from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+import requests
 from src.logger import Logger
 
 from src.reader.dependencies import get_current_user, get_comic_repository
@@ -20,6 +22,9 @@ SCRAPER_FACTORIES: dict[ScanlationGroup, type[BaseScraper]] = {
     ScanlationGroup.MANGA_FIRE: MangaFireToScraper,
 }
 
+# Get scraper API URL from environment variable
+SCRAPER_API_URL = os.getenv("SCRAPER_API_URL", "http://scraper:8810")
+
 
 def add_manga_context(request: Request, feedback: dict | None = None, tag_feedback: dict | None = None):
     """Prepare base context for the add manga page"""
@@ -36,7 +41,7 @@ def add_manga_context(request: Request, feedback: dict | None = None, tag_feedba
 
 
 @router.get("/add_manga", response_class=HTMLResponse)
-async def add_manga(request: Request, current_user: User = Depends(get_current_user)):
+async def add_manga(request: Request, _current_user: User = Depends(get_current_user)):
     """Affiche le formulaire d'ajout de manga"""
     return templates.TemplateResponse("add_manga.html", add_manga_context(request))
 
@@ -45,7 +50,7 @@ async def add_manga(request: Request, current_user: User = Depends(get_current_u
 async def validate_manga_url(
     url: str = Query(...),
     scanlation_group: str = Query(...),
-    current_user: User = Depends(get_current_user),
+    _current_user: User = Depends(get_current_user),
 ):
     """Valide une URL de manga et retourne le nombre de chapitres"""
     try:
@@ -141,16 +146,33 @@ async def create_manga(
         return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
 
     try:
-        with scraper_factory() as scraper:
-            comic = scraper.create_comic(
-                comic_name=name,
-                comic_url=url,
-                scanlation_group=scanlation,
-                comic_type=comic_type_value,
-                status=status_enum,
-                update_frequency=update_frequency_enum,
-                tags=tags_list,
-            )
+        response = requests.post(
+            f"{SCRAPER_API_URL}/comics/create",
+            json={
+                "comic_name": name,
+                "comic_url": url,
+                "scanlation_group": scanlation.value,
+                "comic_type": comic_type_value.value,
+                "status": status_enum.value,
+                "update_frequency": update_frequency_enum.value,
+                "tags": tags_list,
+            },
+            timeout=30.0
+        )
+        response.raise_for_status()
+        result = response.json()
+        comic_id = result["comic_id"]
+    except requests.exceptions.HTTPError as exc:
+        error_detail = "Erreur inconnue"
+        try:
+            error_detail = exc.response.json().get("detail", str(exc))
+        except Exception:  # pylint: disable=broad-except
+            error_detail = str(exc)
+        feedback = {
+            "type": "error",
+            "message": f"Impossible de créer le manga : {error_detail}",
+        }
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
     except Exception as exc:  # pylint: disable=broad-except
         feedback = {
             "type": "error",
@@ -159,7 +181,7 @@ async def create_manga(
         return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
 
     return RedirectResponse(
-        request.url_for("manga_detail", manga_id=comic.id),
+        request.url_for("manga_detail", manga_id=comic_id),
         status_code=303,
     )
 

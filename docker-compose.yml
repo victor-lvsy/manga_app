@@ -25,12 +25,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.reader
+      args:
+        - ENVIRONMENT=dev
     container_name: manga_reader
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USERNAME=root
-      - DB_PASSWORD=pwd
+      - DB_USERNAME=scraper_user
+      - DB_PASSWORD=scraperpassword
       - DB_NAME=manga_reader
       - ENVIRONMENT=dev
       - LOCAL_FOLDER=/app/local_comics
@@ -43,6 +45,8 @@ services:
       mysql:
         condition: service_healthy
     restart: always
+    networks:
+      - manga_network
 
   scraper:
     build:

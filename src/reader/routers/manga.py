@@ -1,24 +1,24 @@
 """Manga-related routes"""
-import asyncio
+import os
 from pathlib import Path
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, JSONResponse
+import requests
 from src.logger import Logger
-from src.reader.context_manager import get_context_manager
 from src.reader.dependencies import (
     get_current_user,
     get_comic_repository,
     get_user_repository,
 )
-from src.db import User, ComicRepository, UserRepository
+from src.db import User, ComicRepository, UserRepository, UpdateStatus
 from src.reader.templates import templates
-from src.db.manga_updater import MangaUpdater
 from src.config import LOCAL_FOLDER
 
 logger = Logger("manga_router")
 router = APIRouter()
 
-context_manager = get_context_manager()
+# Get scraper API URL from environment variable
+SCRAPER_API_URL = os.getenv("SCRAPER_API_URL", "http://scraper:8810")
 
 
 def list_chapters(comic, comic_repo: ComicRepository):
@@ -101,20 +101,45 @@ async def force_update_manga(
     comic = comic_repo.get_comic(int(manga_id))
     if not comic:
         raise HTTPException(status_code=404, detail="Manga not found")
-
+    if comic.update_status == UpdateStatus.PENDING:
+        raise HTTPException(status_code=400, detail="Manga is already being updated")
     # Check if request is AJAX
     accept_header = request.headers.get("accept", "")
     is_ajax = "application/json" in accept_header or request.headers.get("x-requested-with") == "XMLHttpRequest"
 
     try:
-        manga_updater = MangaUpdater(comic_repo)
-        context_manager.add_task(asyncio.create_task(manga_updater.force_update(comic)))
+        # Call scraper API to refresh the comic
+        response = requests.post(
+            f"{SCRAPER_API_URL}/comics/{comic.id}/refresh",
+            timeout=30.0
+        )
+        response.raise_for_status()
 
         if is_ajax:
             return JSONResponse(
                 content={
                     "success": True,
                     "message": "Mise à jour lancée."
+                }
+            )
+        else:
+            return RedirectResponse(
+                url=str(request.url_for("manga_detail", manga_id=manga_id)),
+                status_code=303,
+            )
+    except requests.exceptions.HTTPError as exc:
+        logger.error(f"Error forcing update: {exc}")  # pylint: disable=logging-fstring-interpolation
+        error_detail = "Erreur inconnue"
+        try:
+            error_detail = exc.response.json().get("detail", str(exc))
+        except Exception:  # pylint: disable=broad-except
+            error_detail = str(exc)
+        if is_ajax:
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "success": False,
+                    "message": f"Erreur lors de la mise à jour : {error_detail}"
                 }
             )
         else:
@@ -142,7 +167,7 @@ async def force_update_manga(
 @router.get("/manga/{manga_id}/status", response_class=JSONResponse)
 async def get_manga_status(
     manga_id: str,
-    current_user: User = Depends(get_current_user),
+    _current_user: User = Depends(get_current_user),
     comic_repo: ComicRepository = Depends(get_comic_repository),
 ):
     """Returns the update status of a manga"""
@@ -161,7 +186,7 @@ async def get_manga_status(
 @router.get("/manga/{manga_id}/cover", response_class=FileResponse)
 async def serve_cover(
     manga_id: str,
-    current_user: User = Depends(get_current_user),
+    _current_user: User = Depends(get_current_user),
     comic_repo: ComicRepository = Depends(get_comic_repository),
 ):
     """Sert la couverture d'un manga"""

@@ -91,13 +91,13 @@ class ContextManager:
     async def poll_users(self):
         """Poll users and remove inactive users"""
         while True:
-            logger.debug(f"Polling users, {len(self.active_users)} active users")
             for user in self.active_users:
                 if user.last_activity < datetime.now() - timedelta(seconds=USER_POLL_INTERVAL):
                     logger.debug(f"Removing user {user.user_id} because last activity was {user.last_activity.strftime('%d/%m/%y %H:%M:%S')}")
                     with self.data_base_access_layer.managed_session() as session:
                         UserRepository(session).update_user_activity(user.user_id, int((user.last_activity - user.connection_time).total_seconds()))
                     self.remove_user(user.user_id)
+            logger.debug(f"Polling users, {len(self.active_users)} active users")
             await asyncio.sleep(USER_POLL_INTERVAL / 2)
 
 

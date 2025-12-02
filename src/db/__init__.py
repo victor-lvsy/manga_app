@@ -1,7 +1,7 @@
 """TODO"""
 from .data_access_layer import DatabaseAccessLayer
 from .user_schema import User, UserRole
-from .comic_schema import Comic, Chapter, Page, ScanlationGroup, ComicType, Status, UpdateFrequency
+from .comic_schema import Comic, Chapter, Page, ScanlationGroup, ComicType, Status, UpdateFrequency, UpdateStatus
 from .user import UserRepository
 from .comic import ComicRepository
 from .chapter import ChapterRepository

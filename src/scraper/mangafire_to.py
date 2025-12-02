@@ -112,7 +112,7 @@ class MangaFireToScraper(BaseScraper):
             response = self._get_from_url(url)
             soup = bs4.BeautifulSoup(response.content, "html.parser")
             chapters = self.get_chapter_links(soup)
-            return True, len(chapters), ""
+            return True, len(list(set(chapters))), ""
         except Exception as e:  # pylint: disable=broad-except
             return False, 0, str(e)
 

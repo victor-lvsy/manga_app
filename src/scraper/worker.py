@@ -2,8 +2,8 @@
 import asyncio
 from typing import Optional
 from src.logger import Logger
-from src.db import Comic
-from src.scraper.utils import get_scraper
+from src.db import Comic, ComicRepository, DatabaseAccessLayer, UpdateStatus
+from src.db.manga_updater import MangaUpdater
 
 logger = Logger("worker_context")
 
@@ -36,14 +36,21 @@ class WorkerContext:
     async def process_item(self, comic: Comic):
         """Process an item from the queue"""
         logger.debug(f"Processing comic: {comic.name}")
-        with get_scraper(comic.scanlation_group.value) as scraper:
-            comic_name, chapters_found = await scraper.refresh_comic(comic)
-        return comic_name, chapters_found
+        with DatabaseAccessLayer().managed_session() as session:
+            comic_repo = ComicRepository(session)
+            manga_updater = MangaUpdater(comic_repo)
+            await manga_updater.force_update(comic)
 
-    async def put_item(self, item: Comic):
+    async def put_item(self, comic: Comic):
         """Put a comic into the queue"""
-        await self.queue.put(item)
-        logger.debug(f"Put comic: {item.name} into the queue")
+        if comic.update_status == UpdateStatus.PENDING:
+            logger.debug(f"Comic: {comic.name} is already being updated")
+            return
+        await self.queue.put(comic)
+        with DatabaseAccessLayer().managed_session() as session:
+            comic_repo = ComicRepository(session)
+            comic_repo.update_comic_update_status(comic.id, UpdateStatus.PENDING)
+        logger.debug(f"Put comic: {comic.name} into the queue")
         self.start_worker()
 
     def worker_cleanup(self, _task):

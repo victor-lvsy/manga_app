@@ -91,10 +91,6 @@ class AsuraScansScraper(BaseScraper):
 
         return comic.name, count
 
-    def remove_duplicates(self, img_list):
-        """TODO"""
-        return list(set(img_list))
-
     async def get_img_list(self, soup: bs4.BeautifulSoup):
         """TODO"""
         img_list = []

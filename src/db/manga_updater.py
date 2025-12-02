@@ -44,10 +44,6 @@ class MangaUpdater:
         """TODO"""
         try:
             logger.debug(f"Updating {comic.name}")  # pylint: disable=logging-fstring-interpolation
-            if comic.update_status == UpdateStatus.PENDING:
-                logger.debug(f"Comic {comic.name} is already being updated")  # pylint: disable=logging-fstring-interpolation
-                return
-            self.comic_repository.update_comic_update_status(comic.id, UpdateStatus.PENDING)
             if comic.scanlation_group == ScanlationGroup.ASURA_SCANS:
                 name, count = await AsuraScansScraper().refresh_comic(comic)
             elif comic.scanlation_group == ScanlationGroup.MANGA_FIRE:
