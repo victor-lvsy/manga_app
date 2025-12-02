@@ -32,7 +32,7 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=pwd
       - DB_NAME=manga_reader
-      - RUN_MODE=dev
+      - ENVIRONMENT=dev
       - LOCAL_FOLDER=/app/local_comics
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
     volumes:
@@ -57,7 +57,7 @@ services:
       - DB_USERNAME=scraper_user
       - DB_PASSWORD=scraperpassword
       - DB_NAME=manga_reader
-      - RUN_MODE=dev
+      - ENVIRONMENT=dev
       - LOCAL_FOLDER=/app/local_comics
       - SCRAPER_API_PORT=8810
     volumes:
