@@ -190,9 +190,13 @@ class BaseScraper:
             comic_type=comic_type or ComicType.MANGA,
             status=status,
             update_frequency=update_frequency,
-            tags=tags or [],
         )
         self.comic_repository.create_comic(comic)
+        if tags:
+            for tag in tags:
+                if tag not in [tag.name.lower() for tag in self.comic_repository.get_all_tags()]:
+                    self.comic_repository.create_tag(tag)
+                self.comic_repository.create_comic_tag_link(comic.id, self.comic_repository.get_tag_by_name(tag).id)
         return comic
 
     def create_chapter(self, comic: Comic, chapter_number: int, chapter_url: str):

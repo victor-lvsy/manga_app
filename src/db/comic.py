@@ -180,3 +180,11 @@ class ComicRepository:
         except IntegrityError as e:
             self.session.rollback()
             raise e
+
+    def get_comic_tags(self, comic_id: int) -> list[Tag]:
+        """TODO"""
+        return self.session.exec(select(Tag).join(ComicTagLink, Tag.id == ComicTagLink.tag_id).where(ComicTagLink.comic_id == comic_id)).all()
+
+    def get_all_tags(self) -> list[Tag]:
+        """TODO"""
+        return self.session.exec(select(Tag)).all()

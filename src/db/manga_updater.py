@@ -57,6 +57,7 @@ class MangaUpdater:
             return name, count
         except Exception as e:
             self.comic_repository.update_comic_update_status(comic.id, UpdateStatus.FAILED)
+            logger.error(f"Error updating {comic.name}: {e}")
             raise e
 
     async def force_global_update(self):

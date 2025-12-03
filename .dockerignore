@@ -27,6 +27,7 @@ ENV
 
 # Local files
 local_comics/
+museum/
 *.log
 output.txt
 

@@ -9,10 +9,10 @@ from src.reader.dependencies import get_current_user, get_comic_repository
 from src.db import User, ComicRepository
 from src.reader.templates import templates
 from src.db import ScanlationGroup, ComicType, Status, UpdateFrequency
+from src.db.comic_schema import Tag
 from src.scraper.base import BaseScraper
 from src.scraper.asura_scans import AsuraScansScraper
 from src.scraper.mangafire_to import MangaFireToScraper
-from src.db.tags import get_tags, add_tag
 
 logger = Logger("add_manga")
 router = APIRouter()
@@ -26,7 +26,7 @@ SCRAPER_FACTORIES: dict[ScanlationGroup, type[BaseScraper]] = {
 SCRAPER_API_URL = os.getenv("SCRAPER_API_URL", "http://scraper:8810")
 
 
-def add_manga_context(request: Request, feedback: dict | None = None, tag_feedback: dict | None = None):
+def add_manga_context(request: Request, comic_repo: ComicRepository, feedback: dict | None = None, tag_feedback: dict | None = None):
     """Prepare base context for the add manga page"""
     return {
         "request": request,
@@ -34,16 +34,16 @@ def add_manga_context(request: Request, feedback: dict | None = None, tag_feedba
         "comic_types": list(ComicType),
         "statuses": list(Status),
         "update_frequencies": list(UpdateFrequency),
-        "available_tags": get_tags(),
+        "available_tags": [Tag.denormalize(tag.name) for tag in comic_repo.get_all_tags()],
         "feedback": feedback,
         "tag_feedback": tag_feedback,
     }
 
 
 @router.get("/add_manga", response_class=HTMLResponse)
-async def add_manga(request: Request, _current_user: User = Depends(get_current_user)):
+async def add_manga(request: Request, comic_repo: ComicRepository = Depends(get_comic_repository), _current_user: User = Depends(get_current_user)):
     """Affiche le formulaire d'ajout de manga"""
-    return templates.TemplateResponse("add_manga.html", add_manga_context(request))
+    return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo))
 
 
 @router.get("/add_manga/validate", response_class=JSONResponse)
@@ -113,26 +113,23 @@ async def create_manga(
         status_enum = Status(status)
         update_frequency_enum = UpdateFrequency(update_frequency)
         tags_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
-        for tag in tags_list:
-            if tag not in get_tags():
-                raise ValueError(f"Tag {tag} non trouvé.")
     except ValueError as exc:
         logger.error("Erreur de validation des valeurs: %s", exc)
         feedback = {"type": "error", "message": "Valeurs envoyées invalides. " + str(exc)}
-        return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, feedback))
 
     if comic_repo.get_comic_by_name(name):
         feedback = {"type": "error", "message": "Un manga avec ce nom existe déjà."}
-        return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, feedback))
 
     if comic_repo.get_comic_by_url(url):
         feedback = {"type": "error", "message": "Un manga avec cette URL existe déjà."}
-        return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, feedback))
 
     scraper_factory = SCRAPER_FACTORIES.get(scanlation)
     if not scraper_factory:
         feedback = {"type": "error", "message": "Scanlation non supportée."}
-        return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, feedback))
 
     # Validate URL before creating
     try:
@@ -140,10 +137,10 @@ async def create_manga(
             is_valid, _, error_message = scraper.validate_url_and_get_chapter_count(url)
             if not is_valid:
                 feedback = {"type": "error", "message": f"URL invalide : {error_message}"}
-                return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
+                return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, feedback))
     except Exception as exc:  # pylint: disable=broad-except
         feedback = {"type": "error", "message": f"Erreur lors de la validation de l'URL : {exc}"}
-        return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, feedback))
 
     try:
         response = requests.post(
@@ -172,13 +169,14 @@ async def create_manga(
             "type": "error",
             "message": f"Impossible de créer le manga : {error_detail}",
         }
-        return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, feedback))
     except Exception as exc:  # pylint: disable=broad-except
         feedback = {
             "type": "error",
             "message": f"Impossible de créer le manga : {exc}",
         }
-        return templates.TemplateResponse("add_manga.html", add_manga_context(request, feedback))
+        raise exc
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, feedback))
 
     return RedirectResponse(
         request.url_for("manga_detail", manga_id=comic_id),
@@ -191,19 +189,20 @@ async def create_tag(
     request: Request,
     new_tag: str = Form(...),
     current_user: User = Depends(get_current_user),
+    comic_repo: ComicRepository = Depends(get_comic_repository),
 ):
     """Ajoute un nouveau tag disponible pour les mangas"""
     logger.info(f"Creating tag {new_tag} from user {current_user.username}")
     candidate = new_tag.strip()
     if not candidate:
         tag_feedback = {"type": "error", "message": "Le tag ne peut pas être vide."}
-        return templates.TemplateResponse("add_manga.html", add_manga_context(request, tag_feedback=tag_feedback))
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, tag_feedback=tag_feedback))
 
-    existing_tags = get_tags()
-    if any(tag.lower() == candidate.lower() for tag in existing_tags):
+    existing_tags = [tag.name for tag in comic_repo.get_all_tags()]
+    if any(tag == Tag.normalize(candidate) for tag in existing_tags):
         tag_feedback = {"type": "error", "message": "Ce tag existe déjà."}
-        return templates.TemplateResponse("add_manga.html", add_manga_context(request, tag_feedback=tag_feedback))
+        return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, tag_feedback=tag_feedback))
 
-    add_tag(candidate)
+    comic_repo.create_tag(candidate)
     tag_feedback = {"type": "success", "message": f'Tag "{candidate}" ajouté avec succès.'}
-    return templates.TemplateResponse("add_manga.html", add_manga_context(request, tag_feedback=tag_feedback))
+    return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, tag_feedback=tag_feedback))

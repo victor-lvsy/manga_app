@@ -78,7 +78,7 @@ class CustomLogLevels:
     """
 
     DEBUG = ["worker_context"]
-    INFO = ["config", "db-access-layer", "vrf-generator"]
+    INFO = ["config", "db-access-layer"]
 
 
 class Logger:

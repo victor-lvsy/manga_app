@@ -8,5 +8,6 @@ Pipfile.lock
 Pipfile
 local_comics/
 mysql_data/
-tags.json
-
+museum/
+alembic/
+alembic.ini

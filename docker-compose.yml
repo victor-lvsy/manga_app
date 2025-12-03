@@ -7,6 +7,7 @@ services:
     image: mysql:8.4.7
     container_name: mysql
     environment:
+      - TZ=Europe/Paris
       - MYSQL_ROOT_PASSWORD=pwd
       - MYSQL_DATABASE=manga_reader
     volumes:
@@ -25,20 +26,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.reader
-      args:
-        - ENVIRONMENT=dev
-    container_name: manga_reader
+    container_name: reader
     environment:
+      - TZ=Europe/Paris
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USERNAME=scraper_user
-      - DB_PASSWORD=scraperpassword
+      - DB_USERNAME=${DB_USERNAME_READER}
+      - DB_PASSWORD=${DB_PASSWORD_READER}
       - DB_NAME=manga_reader
-      - ENVIRONMENT=dev
-      - LOCAL_FOLDER=/app/local_comics
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - SECRET_KEY=${SECRET_KEY}
     volumes:
-      - ./local_comics:/app/local_comics
+      - ${MOUNTED_STORAGE}:/app/local_comics
     ports:
       - "8888:8888"
     depends_on:
@@ -52,20 +51,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.scraper
-      args:
-      - ENVIRONMENT=dev
-    container_name: manga_scraper
+    container_name: scraper
     environment:
+      - TZ=Europe/Paris
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USERNAME=scraper_user
-      - DB_PASSWORD=scraperpassword
+      - DB_USERNAME=${DB_USERNAME_SCRAPER}
+      - DB_PASSWORD=${DB_PASSWORD_SCRAPER}
       - DB_NAME=manga_reader
-      - ENVIRONMENT=dev
-      - LOCAL_FOLDER=/app/local_comics
-      - SCRAPER_API_PORT=8810
+      - ENVIRONMENT=${ENVIRONMENT}
     volumes:
-      - ./local_comics:/app/local_comics
+      - ${MOUNTED_STORAGE}:/app/local_comics
     ports:
       - "8810:8810"
     depends_on:

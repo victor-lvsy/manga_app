@@ -10,7 +10,7 @@ if len(sys.argv) > 1 and sys.argv[1] == "dev":
     RUN_MODE = "dev"
 elif len(sys.argv) > 1 and sys.argv[1] == "prod":
     logger.info("Running in production mode")
-    LOCAL_FOLDER = "/media/victor/DD_RPI/manga_reader"
+    LOCAL_FOLDER = "/app/local_comics"
     RUN_MODE = "prod"
 else:
     logger.error("Invalid mode")

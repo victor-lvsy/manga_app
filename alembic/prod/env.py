@@ -6,7 +6,7 @@ from sqlmodel import SQLModel
 
 from alembic import context
 
-from src.db.comic_schema import Comic, Chapter, Page
+from src.db.comic_schema import Comic, Chapter, Page, Tag, ComicTagLink
 from src.db.user_schema import User, UserComicLink, UserChapterLink
 
 # this is the Alembic Config object, which provides

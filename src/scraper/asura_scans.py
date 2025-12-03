@@ -86,8 +86,9 @@ class AsuraScansScraper(BaseScraper):
                 count += 1
                 logger.debug(f"{comic.name} - Found new chapter {chapter} - Downloading...")  # pylint: disable=logging-fstring-interpolation
                 await self.save_asura_chapter(comic, chapter, comic.url)
+                self.comic_repository.update_comic_last_updated(comic.id)
 
-        logger.debug(f"{comic.name} - Found {count} new chapters")  # pylint: disable=logging-fstring-interpolation
+        logger.info(f"{comic.name} - Found {count} new chapters")  # pylint: disable=logging-fstring-interpolation
 
         return comic.name, count
 

@@ -85,8 +85,9 @@ class MangaFireToScraper(BaseScraper):
                 count += 1
                 logger.debug(f"{comic.name} - Found new chapter {chapter[0]} - Downloading...")  # pylint: disable=logging-fstring-interpolation
                 await self.save_mangafire_chapter(comic, chapter[0], chapter[1])
+                self.comic_repository.update_comic_last_updated(comic.id)
 
-        logger.debug(f"{comic.name} - Found {count} new chapters")  # pylint: disable=logging-fstring-interpolation
+        logger.info(f"{comic.name} - Found {count} new chapters")  # pylint: disable=logging-fstring-interpolation
         return comic.name, count
 
     def get_chapter_links(self, soup: bs4.BeautifulSoup) -> List[Tuple[str, str]]:

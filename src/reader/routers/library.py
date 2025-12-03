@@ -3,9 +3,8 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse
 
 from src.reader.dependencies import get_current_user, get_comic_repository, get_user_repository
-from src.db import User, ComicRepository, UserRepository
+from src.db import User, ComicRepository, UserRepository, Tag
 from src.reader.templates import templates
-from src.db.tags import get_tags
 from src.logger import Logger
 
 logger = Logger("library")
@@ -27,7 +26,7 @@ async def acceuil(
     def format_manga(manga):
         manga_dict = {**manga.model_dump(), "number_of_chapters": len(comic_repo.get_comic_chapters(manga.id))}
         manga_dict["is_followed"] = user_repo.is_following_comic(current_user.id, manga.id)
-        manga_dict["tags"] = [tag.lower() for tag in manga.tags] if manga.tags else []
+        manga_dict["tags"] = [tag.name.lower() for tag in comic_repo.get_comic_tags(manga.id)]
         manga_dict["comic_type"] = manga.comic_type.value if manga.comic_type else "manga"
         manga_dict["timestamp"] = int(manga.last_updated.timestamp())
         return manga_dict
@@ -89,7 +88,7 @@ async def library(
         manga_dict = {**manga.model_dump(), "number_of_chapters": len(comic_repo.get_comic_chapters(manga.id))}
         manga_dict["is_followed"] = user_repo.is_following_comic(current_user.id, manga.id)
         # Ensure tags and comic_type are included
-        manga_dict["tags"] = [tag.lower() for tag in manga.tags] if manga.tags else []
+        manga_dict["tags"] = [tag.name.lower() for tag in comic_repo.get_comic_tags(manga.id)]
         manga_dict["comic_type"] = manga.comic_type.value if manga.comic_type else "manga"
         # Add timestamp for better sorting
         manga_dict["timestamp"] = int(manga.last_updated.timestamp())
@@ -98,5 +97,5 @@ async def library(
     return templates.TemplateResponse("library.html", {
         "request": request,
         "mangas": mangas_with_follow_status,
-        "available_tags": get_tags(),
+        "available_tags": [Tag.denormalize(tag.name) for tag in comic_repo.get_all_tags()],
     })

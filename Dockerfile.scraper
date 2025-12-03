@@ -44,10 +44,6 @@ COPY src/scraper/start.sh .
 
 USER root
 RUN chmod +x /home/appuser/src/scraper/start.sh
-ARG ENVIRONMENT=NO_VALUE
-RUN [ ! "${ENVIRONMENT}" = "NO_VALUE" ]
-ENV ENVIRONMENT=${ENVIRONMENT}
-RUN echo "ENVIRONMENT=${ENVIRONMENT}"
 
 EXPOSE 8810
 
