@@ -11,3 +11,4 @@ mysql_data/
 museum/
 alembic/
 alembic.ini
+tags.json
