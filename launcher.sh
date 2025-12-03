@@ -13,5 +13,5 @@ sudo -u victor -i bash << 'EOF'
 export PATH="$PATH:/home/victor/.local/bin"
 export PATH="$PATH:/home/victor/Documents/manga_app/.venv/bin"
 cd /home/victor/Documents/manga_app
-pipenv run python -m src.reader.app
+pipenv run python -m src.reader.app prod
 EOF
