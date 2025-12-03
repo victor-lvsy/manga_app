@@ -5,7 +5,7 @@ from src.logger import Logger
 from src.db import Comic, ComicRepository, DatabaseAccessLayer, UpdateStatus
 from src.db.manga_updater import MangaUpdater
 
-logger = Logger("worker_context")
+logger = Logger("worker-context")
 
 
 class WorkerContext:

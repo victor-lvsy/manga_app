@@ -15,7 +15,7 @@ from src.reader.dependencies import (
 from src.db import User, ComicRepository, ChapterRepository, PageRepository, UserRepository
 from src.reader.templates import templates
 
-logger = Logger("chapter_router")
+logger = Logger("chapter-router")
 router = APIRouter()
 
 

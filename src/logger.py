@@ -12,16 +12,16 @@
         logger = Logger(__name__)
         logger.dev("This is a developer level message.")
 """
-import sys
+import os
 import logging
 import asyncio
+import yaml
 
+IAM = os.getenv("IAM", "reader")
 
-if sys.argv[1] == "dev":
-    log_level = logging.DEBUG
-else:
-    log_level = logging.INFO
-
+with open("./src/logger_config.yml", "r") as f:
+    logger_config = yaml.safe_load(f)
+    log_level = logger_config[IAM]
 
 class TaskNameFilter(logging.Filter):
     """
@@ -33,10 +33,10 @@ class TaskNameFilter(logging.Filter):
             if task:
                 record.task_name = task.get_name()[:9]
             else:
-                record.task_name = "Main"
+                record.task_name = "main"
         except RuntimeError:
             # No running event loop → synchronous context
-            record.task_name = "Main"
+            record.task_name = "main"
         return True
 
 
@@ -72,15 +72,6 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-class CustomLogLevels:
-    """
-    Custom Log Levels
-    """
-
-    DEBUG = ["worker_context"]
-    INFO = ["config", "db-access-layer"]
-
-
 class Logger:
     """
     Custom Logger Wrapper
@@ -94,11 +85,15 @@ class Logger:
     :param level: The logging level threshold. Defaults to logging.INFO.
     :type level: int
     """
-    def __init__(self, name, level=log_level):
+    def __init__(self, name, level: dict = log_level):
+        warn = False
         self.logger = logging.getLogger(name)
-        if name in CustomLogLevels.DEBUG:
+        if log_level.get(name) == "DEV":
             level = logging.DEBUG
-        elif name in CustomLogLevels.INFO:
+        elif log_level.get(name) == "INFO":
+            level = logging.INFO
+        else:
+            warn = True
             level = logging.INFO
         self.logger.setLevel(level)
         fmt = CustomFormatter()
@@ -107,7 +102,10 @@ class Logger:
         self.logger.addHandler(handler)
         self.logger.propagate = False
         self.logger.addFilter(TaskNameFilter())
-        self.debug(f"Logger initialized for {name}")
+        if not warn:
+            self.debug(f"Logger initialized for {name} with level {level}")
+        else:
+            self.warning(f"Logger initialized for {name} with no log level found in logger_config.yml")
 
     def debug(self, msg, task_name=None):
         """
@@ -157,6 +155,12 @@ class Logger:
 
 if __name__ == "__main__":
     logger = Logger(__name__)
+    logger.debug("This is a debug level message.")
+    logger.info("This is an info level message.", task_name="1234567890")
+    logger.warning("This is a warning level message.", task_name="1234567890")
+    logger.error("This is an error level message.", task_name="1234567890")
+    logger.critical("This is a critical level message.", task_name="1234567890")
+    logger = Logger("user")
     logger.debug("This is a debug level message.")
     logger.info("This is an info level message.", task_name="1234567890")
     logger.warning("This is a warning level message.", task_name="1234567890")

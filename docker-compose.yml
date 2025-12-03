@@ -21,6 +21,10 @@ services:
     restart: always
     networks:
       - manga_network
+    logging:
+      driver: journald
+      options:
+        tag: "mysql"
 
   reader:
     build:
@@ -28,9 +32,11 @@ services:
       dockerfile: Dockerfile.reader
     container_name: reader
     environment:
+      - IAM=reader
       - TZ=Europe/Paris
       - DB_HOST=mysql
       - DB_PORT=3306
+      - HTTP_SCHEME=${HTTP_SCHEME}
       - DB_USERNAME=${DB_USERNAME_READER}
       - DB_PASSWORD=${DB_PASSWORD_READER}
       - DB_NAME=manga_reader
@@ -46,6 +52,10 @@ services:
     restart: always
     networks:
       - manga_network
+    logging:
+      driver: journald
+      options:
+        tag: "reader"
 
   scraper:
     build:
@@ -53,9 +63,11 @@ services:
       dockerfile: Dockerfile.scraper
     container_name: scraper
     environment:
+      - IAM=scraper
       - TZ=Europe/Paris
       - DB_HOST=mysql
       - DB_PORT=3306
+      - SCRAPER_API_PORT=8810
       - DB_USERNAME=${DB_USERNAME_SCRAPER}
       - DB_PASSWORD=${DB_PASSWORD_SCRAPER}
       - DB_NAME=manga_reader
@@ -70,3 +82,7 @@ services:
     restart: always
     networks:
       - manga_network
+    logging:
+      driver: journald
+      options:
+        tag: "scraper"

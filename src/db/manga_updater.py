@@ -10,7 +10,7 @@ from src.reader.context_manager import get_context_manager
 from .comic_schema import UpdateFrequency, ScanlationGroup, Comic, Status, UpdateStatus
 from .comic import ComicRepository
 
-logger = Logger("manga_updater")
+logger = Logger("manga-updater")
 
 
 def to_number_of_days(update_frequency: UpdateFrequency) -> int:

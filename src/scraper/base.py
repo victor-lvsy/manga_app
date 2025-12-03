@@ -28,7 +28,7 @@ from src.db import (
 )
 from src.config import LOCAL_FOLDER
 
-logger = Logger("base_scraper")
+logger = Logger("base-scraper")
 
 
 def validate_url(url: str) -> str:

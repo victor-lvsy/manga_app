@@ -11,7 +11,7 @@ from .base import BaseScraper
 from .ssl import SSLChecker
 from .vrf_generator import VRFGenerator, VRFGeneratorError
 
-logger = Logger("mangafire_to")
+logger = Logger("mangafire")
 
 
 class MangaFireToScraper(BaseScraper):

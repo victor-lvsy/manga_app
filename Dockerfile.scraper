@@ -32,7 +32,7 @@ RUN apt-get update && \
 
 USER appuser
 
-# Copy requirements file
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

@@ -8,7 +8,7 @@ from src.logger import Logger
 from src.db import Comic, ScanlationGroup
 from .base import BaseScraper
 
-logger = Logger("asura_scans")
+logger = Logger("asura-scans")
 
 
 class AsuraScansScraper(BaseScraper):

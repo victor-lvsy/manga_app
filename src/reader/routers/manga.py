@@ -14,7 +14,7 @@ from src.db import User, ComicRepository, UserRepository, UpdateStatus
 from src.reader.templates import templates
 from src.config import LOCAL_FOLDER
 
-logger = Logger("manga_router")
+logger = Logger("manga-router")
 router = APIRouter()
 
 # Get scraper API URL from environment variable

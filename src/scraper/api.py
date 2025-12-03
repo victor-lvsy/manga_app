@@ -227,4 +227,4 @@ async def scan_scanlation_group(scanlation_group: str, background_tasks: Backgro
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("SCRAPER_API_PORT", "8889"))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="error")

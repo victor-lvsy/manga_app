@@ -7,7 +7,7 @@ from src.logger import Logger
 from src.db import UserRepository, DatabaseAccessLayer
 
 
-logger = Logger("context_manager")
+logger = Logger("context-manager")
 
 USER_POLL_INTERVAL = 300
 

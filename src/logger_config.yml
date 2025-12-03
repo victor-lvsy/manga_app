@@ -1,0 +1,37 @@
+scraper:
+  user: INFO
+  comic: INFO
+  chapter: INFO
+  page: INFO
+  config: INFO
+  base-scraper: INFO
+  ssl-checker: INFO
+  context-manager: DEV
+  vrf-generator: INFO
+  mangafire: DEV
+  asura-scans: DEV
+  manga-updater: DEV
+  worker-context: DEV
+  db-access-layer: INFO
+
+reader:
+  config: INFO
+  user: INFO
+  comic: INFO
+  chapter: INFO
+  page: INFO
+  context-manager: DEV
+  auth: INFO
+  library: INFO
+  manga-router: INFO
+  chapter-router: INFO
+  add-manga: DEV
+  base-scraper: INFO
+  asura-scans: DEV
+  ssl-checker: INFO
+  vrf-generator: INFO
+  mangafire: DEV
+  manga-updater: DEV
+  admin: INFO
+  app: INFO
+  db-access-layer: INFO

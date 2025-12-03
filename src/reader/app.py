@@ -9,7 +9,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette import status as starlette_status
 from starlette.responses import RedirectResponse
 
-from src.config import RUN_MODE
+from src.config import HTTP_SCHEME
 from src.logger import Logger
 from src.reader.routers import auth, library, manga, chapter, add_manga, admin, images
 from src.reader.context_manager import get_context_manager
@@ -24,7 +24,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """Middleware to check authentication for protected routes"""
     async def dispatch(self, request, call_next):
         # Allow access to login, logout, and static files without authentication
-        if RUN_MODE == "dev":
+        if HTTP_SCHEME == "dev":
             request.scope["scheme"] = "http"
         else:
             request.scope["scheme"] = "https"
@@ -78,7 +78,7 @@ app.include_router(images.router)
 if __name__ == "__main__":
     import uvicorn
 
-    if RUN_MODE == "dev":
+    if HTTP_SCHEME == "dev":
         uvicorn.run(app, host="0.0.0.0", port=8888, log_level="error")
     else:
         uvicorn.run(app, host="0.0.0.0", port=8888, log_level="error")

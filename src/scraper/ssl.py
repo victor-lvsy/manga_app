@@ -7,7 +7,7 @@ import requests
 import certifi
 from src.logger import Logger
 
-logger = Logger("ssl_checker")
+logger = Logger("ssl-checker")
 
 
 class SSLChecker:

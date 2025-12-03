@@ -14,7 +14,7 @@ from src.scraper.base import BaseScraper
 from src.scraper.asura_scans import AsuraScansScraper
 from src.scraper.mangafire_to import MangaFireToScraper
 
-logger = Logger("add_manga")
+logger = Logger("add-manga")
 router = APIRouter()
 
 SCRAPER_FACTORIES: dict[ScanlationGroup, type[BaseScraper]] = {
@@ -175,7 +175,6 @@ async def create_manga(
             "type": "error",
             "message": f"Impossible de créer le manga : {exc}",
         }
-        raise exc
         return templates.TemplateResponse("add_manga.html", add_manga_context(request, comic_repo, feedback))
 
     return RedirectResponse(
