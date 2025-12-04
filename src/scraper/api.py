@@ -128,7 +128,7 @@ async def create_comic(request: CreateComicRequest):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@app.post("/comics/validate-url")
+@app.get("/comics/validate-url")
 async def validate_url(request: ValidateUrlRequest):
     """Validate a manga URL and get chapter count"""
     try:
@@ -144,7 +144,7 @@ async def validate_url(request: ValidateUrlRequest):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@app.post("/comics/{comic_id}/refresh")
+@app.get("/comics/{comic_id}/refresh")
 async def refresh_comic(comic_id: int):
     """Refresh a specific comic to check for new chapters"""
     try:
@@ -168,7 +168,7 @@ async def refresh_comic(comic_id: int):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@app.post("/scan/all")
+@app.get("/scan/all")
 async def scan_all_comics(background_tasks: BackgroundTasks):
     """Scan all comics for new chapters (runs in background)"""
     try:
@@ -191,7 +191,7 @@ async def scan_all_comics(background_tasks: BackgroundTasks):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@app.post("/scan/{scanlation_group}")
+@app.get("/scan/{scanlation_group}")
 async def scan_scanlation_group(scanlation_group: str, background_tasks: BackgroundTasks):
     """Scan all comics from a specific scanlation group for new chapters"""
     try:

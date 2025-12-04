@@ -1,5 +1,6 @@
 """Admin routes"""
-import asyncio
+import os
+import requests
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse
 from sqlmodel import select
@@ -13,11 +14,11 @@ from src.reader.dependencies import (
 from src.db import User, UserRepository, ComicRepository
 from src.reader.templates import templates
 from src.db import UserRole
-from src.db.manga_updater import MangaUpdater
 from src.logger import Logger
 logger = Logger("admin")
 router = APIRouter()
 
+SCRAPER_API_URL = os.getenv("SCRAPER_API_URL", "http://scraper:8810")
 
 context_manager = get_context_manager()
 
@@ -224,15 +225,15 @@ async def admin_update_all_mangas(
     request: Request,
     current_user: User = Depends(get_admin_user),
     user_repo: UserRepository = Depends(get_user_repository),
-    comic_repo: ComicRepository = Depends(get_comic_repository),
 ):
     """Search for new chapters for all mangas (admin only)"""
     logger.info(f"Updating all mangas from user {current_user.username}")
+    users = user_repo.session.exec(select(User)).all()
     try:
-        manga_updater = MangaUpdater(comic_repo)
-        get_context_manager().add_task(asyncio.create_task(manga_updater.force_global_update()))
+        response = requests.get(f"{SCRAPER_API_URL}/scan/all")
+        if response.status_code != 200:
+            raise Exception(f"Failed to update all mangas: {response.status_code} {response.text}")
 
-        users = user_repo.session.exec(select(User)).all()
         return templates.TemplateResponse("admin.html", {
             "request": request,
             "users": users,
@@ -244,7 +245,6 @@ async def admin_update_all_mangas(
         })
     except Exception as exc:  # pylint: disable=broad-except
         logger.error(f"Error updating all mangas: {exc}")  # pylint: disable=logging-fstring-interpolation
-        users = user_repo.session.exec(select(User)).all()
         return templates.TemplateResponse("admin.html", {
             "request": request,
             "users": users,

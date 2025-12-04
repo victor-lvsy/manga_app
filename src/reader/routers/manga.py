@@ -109,7 +109,7 @@ async def force_update_manga(
 
     try:
         # Call scraper API to refresh the comic
-        response = requests.post(
+        response = requests.get(
             f"{SCRAPER_API_URL}/comics/{comic.id}/refresh",
             timeout=30.0
         )
