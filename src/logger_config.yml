@@ -1,6 +1,6 @@
 scraper:
   user: INFO
-  comic: INFO
+  comic: DEV
   chapter: INFO
   page: INFO
   config: INFO

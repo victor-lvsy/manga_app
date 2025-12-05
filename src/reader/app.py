@@ -24,7 +24,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """Middleware to check authentication for protected routes"""
     async def dispatch(self, request, call_next):
         # Allow access to login, logout, and static files without authentication
-        if HTTP_SCHEME == "dev":
+        if HTTP_SCHEME == "http":
             request.scope["scheme"] = "http"
         else:
             request.scope["scheme"] = "https"

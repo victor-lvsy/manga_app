@@ -62,16 +62,17 @@ class Tag(SQLModel, table=True):
 
     comics: list["Comic"] = Relationship(back_populates="tags", link_model=ComicTagLink)
 
-    def normalize(name: str) -> str:
+    def normalize(self, name: str) -> str:
         """TODO"""
         text = unicodedata.normalize('NFD', name).encode('ASCII', 'ignore').decode('ASCII').lower()
         text = ' '.join(text.split())
         return re.sub(r'[^\w\s]', '', text).lower().replace(" ", "_")
 
-    def denormalize(name: str) -> str:
+    def denormalize(self, name: str) -> str:
         """TODO"""
         text = name.replace("_", " ")
         return text.title()
+
 
 class Page(SQLModel, table=True):
     """TODO"""
