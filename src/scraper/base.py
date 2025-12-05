@@ -177,6 +177,7 @@ class BaseScraper:
         status: Status = Status.ONGOING,
         update_frequency: UpdateFrequency = UpdateFrequency.MONTHLY,
         tags: list[str] | None = None,
+        created_by_id: int | None = None,
     ):
         """TODO"""
         comic_folder_name = comic_name.replace(" ", "_"). replace("\'", " ").lower()
@@ -190,6 +191,7 @@ class BaseScraper:
             comic_type=comic_type or ComicType.MANGA,
             status=status,
             update_frequency=update_frequency,
+            created_by_id=created_by_id,
         )
         self.comic_repository.create_comic(comic)
         if tags:

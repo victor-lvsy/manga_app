@@ -153,6 +153,7 @@ async def create_manga(
                 "status": status_enum.value,
                 "update_frequency": update_frequency_enum.value,
                 "tags": tags_list,
+                "created_by_id": current_user.id,
             },
             timeout=30.0
         )

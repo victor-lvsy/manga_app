@@ -47,6 +47,11 @@ class UserRepository:
         """TODO"""
         try:
             deleted_user = self.get_user(user_id)
+            for comic in deleted_user.created_comics:
+                comic.created_by = None
+                comic.created_by_id = None
+                comic.created_by_name = deleted_user.username
+                self.session.add(comic)
             self.session.delete(deleted_user)
             self.session.commit()
             logger.debug(f"User deleted: {deleted_user.username}")  # pylint: disable=logging-fstring-interpolation

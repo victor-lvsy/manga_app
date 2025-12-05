@@ -62,13 +62,13 @@ class Tag(SQLModel, table=True):
 
     comics: list["Comic"] = Relationship(back_populates="tags", link_model=ComicTagLink)
 
-    def normalize(self, name: str) -> str:
+    def normalize(name: str) -> str:
         """TODO"""
         text = unicodedata.normalize('NFD', name).encode('ASCII', 'ignore').decode('ASCII').lower()
         text = ' '.join(text.split())
         return re.sub(r'[^\w\s]', '', text).lower().replace(" ", "_")
 
-    def denormalize(self, name: str) -> str:
+    def denormalize(name: str) -> str:
         """TODO"""
         text = name.replace("_", " ")
         return text.title()
@@ -114,15 +114,19 @@ class Comic(SQLModel, table=True):
     comic_type: ComicType
     status: Status = Field(default=Status.ONGOING)
     update_frequency: UpdateFrequency = Field(default=UpdateFrequency.MONTHLY)
-    tags: list["Tag"] = Relationship(back_populates="comics", link_model=ComicTagLink)
     blacklist_chapters: List = Field(sa_column=Column[float](JSON), default_factory=list)
 
+    tags: list["Tag"] = Relationship(back_populates="comics", link_model=ComicTagLink)
+    created_by: Optional["User"] = Relationship(back_populates="created_comics")
+    created_by_id: Optional[int] = Field(default=None, foreign_key="User.id", nullable=True)
+    created_by_name: str = Field(default="Default User")
     chapters: list[Chapter] = Relationship(back_populates="comic", cascade_delete=True)
     user: Optional["User"] = Relationship(back_populates="followed_comics", link_model=UserComicLink)
 
     def model_dump(self, *args, **kwargs):
         """TODO"""
         data = super().model_dump(*args, **kwargs)
+        data["created_by"] = self.created_by.username if self.created_by else self.created_by_name
         data["update_status"] = self.update_status.value.replace("_", " ").title()  # pylint: disable=no-member
         data["last_updated"] = self.last_updated.strftime("%d/%m/%y, %H:%M")
         data["scanlation_group"] = self.scanlation_group.value.replace("_", " ").title()

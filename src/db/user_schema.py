@@ -38,5 +38,6 @@ class User(SQLModel, table=True):
     activity_time: int = Field(default=0)
     last_activity: datetime = Field(default=datetime.now())
     role: UserRole = Field(default=UserRole.READER)
+    created_comics: list["Comic"] = Relationship(back_populates="created_by")
     followed_comics: list["Comic"] = Relationship(back_populates="user", link_model=UserComicLink)
     read_chapters: list["Chapter"] = Relationship(back_populates="user", link_model=UserChapterLink)

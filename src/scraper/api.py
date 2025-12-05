@@ -35,6 +35,7 @@ class CreateComicRequest(BaseModel):
     status: Optional[str] = "ongoing"  # "ongoing", "completed", "hiatus"
     update_frequency: Optional[str] = "monthly"  # "weekly", "biweekly", "monthly"
     tags: Optional[list[str]] = None
+    created_by_id: Optional[int] = None
 
 
 class ValidateUrlRequest(BaseModel):
@@ -116,7 +117,8 @@ async def create_comic(request: CreateComicRequest):
                 comic_type=comic_type,
                 status=status,
                 update_frequency=update_freq,
-                tags=request.tags or []
+                tags=request.tags or [],
+                created_by_id=request.created_by_id,
             )
 
         return {
