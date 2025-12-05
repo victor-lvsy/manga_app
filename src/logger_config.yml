@@ -36,3 +36,4 @@ reader:
   admin: INFO
   app: INFO
   db-access-layer: INFO
+  vrf-telemetry: INFO

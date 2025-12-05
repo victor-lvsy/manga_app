@@ -33,6 +33,9 @@
                     {% if manga.url %}
                     <br><small>Source: <a href="{{ manga.url }}" target="_blank" class="source-link">{{ manga.scanlation_group }}</a></small>
                     {% endif %}
+                    {% if manga.created_by %}
+                    <br><small>Créé par: <span class="creator-name">{{ manga.created_by }}</span></small>
+                    {% endif %}
                 {% else %}
                     Aucun manga sélectionné.
                 {% endif %}
@@ -82,6 +85,9 @@
                     {{ manga.name }}
                     {% if manga.url %}
                     <br><small>Source: <a href="{{ manga.url }}" target="_blank" class="source-link">{{ manga.scanlation_group }}</a></small>
+                    {% endif %}
+                    {% if manga.created_by %}
+                    <br><small>Créé par: <span class="creator-name">{{ manga.created_by }}</span></small>
                     {% endif %}
                 {% else %}
                     Aucun manga sélectionné.
