@@ -30,13 +30,12 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 
-USER appuser
-
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN playwright install
+USER appuser
+RUN playwright install chromium
 
 # Copy application code
 COPY src/ ./src/
