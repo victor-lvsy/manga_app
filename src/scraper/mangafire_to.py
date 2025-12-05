@@ -46,6 +46,8 @@ class MangaFireToScraper(BaseScraper):
             except Exception as e:
                 logger.error(f"Error getting chapter VRF token: {e}")  # pylint: disable=W1203
                 raise
+        for key, value in self.vrf_generator._telemetry[-1].to_dict().items():  # pylint: disable=W0212
+            logger.debug(f"Telemetry: {key}: {value}")
         params = {'vrf': vrf}
         data_json = self._get(path=path, params=params).json()
         images = data_json.get('result').get('images')

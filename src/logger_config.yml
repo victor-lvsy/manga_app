@@ -7,12 +7,13 @@ scraper:
   base-scraper: INFO
   ssl-checker: INFO
   context-manager: DEV
-  vrf-generator: INFO
+  vrf-generator: DEV
   mangafire: DEV
   asura-scans: DEV
   manga-updater: DEV
   worker-context: DEV
   db-access-layer: INFO
+  vrf-telemetry: INFO
 
 reader:
   config: INFO

@@ -1,10 +1,11 @@
 """VRF token generator for MangaFire using Playwright to intercept network requests"""
 import asyncio
 import random
-from typing import Optional
+from typing import Optional, List
 from urllib.parse import urlparse, parse_qs
 
 from src.reader.context_manager import get_context_manager
+from src.scraper.vrf_telemetry import VRFGeneratorTelemetry, WaitReason
 from src.logger import Logger
 try:
     from playwright.async_api import async_playwright, Browser, Page, Route
@@ -21,6 +22,12 @@ class VRFGeneratorError(Exception):
         super().__init__(message)
 
 
+class DetectedError(Exception):
+    """Exception raised when VRF generator detects a bot"""
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 class VRFGenerator:
     """Generates VRF tokens by intercepting AJAX requests using Playwright"""
 
@@ -33,6 +40,7 @@ class VRFGenerator:
         self._playwright = None
         self._captured_url: Optional[str] = None
         self._lock = asyncio.Lock()
+        self._telemetry: List[VRFGeneratorTelemetry] = []
 
     async def _init_browser(self):
         """Initialize Playwright browser (create fresh instance each time like Kotlin WebView)"""
@@ -210,7 +218,7 @@ class VRFGenerator:
 
         self.page = await self.context.new_page()
 
-    async def _setup_request_interception(self, url_pattern: str, capture_only: bool = True, target_url: str = None):
+    async def _setup_request_interception(self, target_url: str = None):
         """Setup request interception to capture URLs matching the pattern (like Kotlin WebViewHelper)"""
         self._captured_url = None
 
@@ -219,10 +227,11 @@ class VRFGenerator:
             request = route.request
             url = request.url
             parsed_url_obj = urlparse(url)
+            context = "request_interception"
 
             # Allow main page (like Kotlin line 73) - exact match only
             if target_url and url == target_url:
-                logger.debug(f"allowed: {url}")  # pylint: disable=W1203
+                self._telemetry[-1].log_allowed(url, context)
                 await route.continue_()
                 return
 
@@ -231,20 +240,20 @@ class VRFGenerator:
             if "mfcdn.cc" in parsed_url_obj.netloc:
                 path_segments = [seg for seg in parsed_url_obj.path.split('/') if seg]
                 if path_segments and "js" in path_segments[-1].lower():
-                    logger.debug(f"allowed: {url}")  # pylint: disable=W1203
+                    self._telemetry[-1].log_allowed(url, context)
                     await route.continue_()
                     return
 
             # Allow jquery script (like Kotlin lines 104-107)
             # Kotlin checks: host.contains("cloudflare.com") && encodedPath.contains("jquery")
             if "cloudflare.com" in parsed_url_obj.netloc and "jquery" in parsed_url_obj.path:
-                logger.debug(f"allowed: {url}")  # pylint: disable=W1203
+                self._telemetry[-1].log_allowed(url, context)
                 await route.continue_()
                 return
 
             # Block all images (like Kotlin blockNetworkImage = true)
             if any(url.lower().endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico']):
-                logger.debug(f"denied (image): {url}")  # pylint: disable=W1203
+                self._telemetry[-1].log_denied(f"(image) {url}", context)
                 await route.abort()
                 return
 
@@ -255,17 +264,17 @@ class VRFGenerator:
             # Else -> Block
             if parsed_url_obj.netloc == "mangafire.to" and "ajax/read" in parsed_url_obj.path:
                 if any(pattern in parsed_url_obj.path for pattern in ["ajax/read/chapter", "ajax/read/volume"]):
-                    logger.debug(f"captured: {url}")  # pylint: disable=W1203
+                    self._telemetry[-1].log_captured(url, context)
                     self._captured_url = url
                     await route.abort()
                     return
                 else:
                     # Allow other ajax/read requests (like Kotlin line 314)
-                    logger.debug(f"allowed: {url}")  # pylint: disable=W1203
+                    self._telemetry[-1].log_allowed(url, context)
                     await route.continue_()
                     return
             else:
-                logger.debug(f"denied: {url}")  # pylint: disable=W1203
+                self._telemetry[-1].log_denied(url, context)
                 await route.abort()
                 return
 
@@ -283,16 +292,16 @@ class VRFGenerator:
         Raises:
             Exception: If VRF token cannot be found
         """
+        self._telemetry.append(VRFGeneratorTelemetry(url=chapter_url))
         async with self._lock:
-            # Check cache first (use URL as key)
             if chapter_url in self._vrf_cache:
                 return self._vrf_cache[chapter_url]
 
             await self._init_browser()
-            # Create fresh context/page like Kotlin creates fresh WebView
             await self._create_fresh_context_and_page()
 
             try:
+                context = "base_url_session"
                 # First, navigate to the base URL WITHOUT strict interception to establish a session
                 # This allows the site to set cookies and perform bot checks
                 logger.debug("Establishing session by visiting base URL first (allowing all resources)")
@@ -300,67 +309,68 @@ class VRFGenerator:
                 try:
                     response = await self.page.goto(self.base_url, wait_until="domcontentloaded", timeout=30000)
                     if response and response.status >= 400:
-                        logger.warning(f"Base URL returned status {response.status}")
+                        self._telemetry[-1].record_warning(f"Base URL returned status {response.status}", context)
 
                     # Wait a bit for any redirects or bot checks
-                    await asyncio.sleep(random.uniform(2.0, 3.5))
+                    wait_time = random.uniform(2.0, 3.5)
+                    self._telemetry[-1].log_wait(wait_time, WaitReason.BOT_CHECK, context)
+                    await asyncio.sleep(wait_time)
 
                     # Check if we're still on the base URL (not redirected)
                     current_url = self.page.url
                     if current_url != self.base_url and current_url != f"{self.base_url}/":
-                        logger.warning(f"Unexpected redirect from base URL to: {current_url}")
+                        self._telemetry[-1].record_warning(f"Redirected from base URL to {current_url}, trying to go back", context)
                         # If redirected, try to go back to base URL
                         if "mangafire.to" in current_url:
                             await self.page.goto(self.base_url, wait_until="domcontentloaded", timeout=30000)
-                            await asyncio.sleep(random.uniform(1.0, 2.0))
+                            wait_time = random.uniform(1.0, 2.0)
+                            self._telemetry[-1].log_wait(wait_time, WaitReason.REDIRECT, context)
+                            await asyncio.sleep(wait_time)
 
                     # Simulate human-like behavior: scroll a bit and interact
-                    await self.page.evaluate("""
-                        window.scrollTo(0, Math.random() * 300);
-                    """)
-                    await asyncio.sleep(random.uniform(0.8, 1.5))
+                    try:
+                        await self.page.evaluate("""
+                            window.scrollTo(0, Math.random() * 300);
+                        """)
+                        wait_time = random.uniform(0.8, 1.5)
+                        self._telemetry[-1].log_wait(wait_time, WaitReason.SCROLL, context)
+                        await asyncio.sleep(wait_time)
 
-                    # Move mouse cursor slightly (simulates human presence)
-                    await self.page.mouse.move(random.randint(100, 500), random.randint(100, 500))
-                    await asyncio.sleep(random.uniform(0.3, 0.7))
+                        # Move mouse cursor slightly (simulates human presence)
+                        await self.page.mouse.move(random.randint(100, 500), random.randint(100, 500))
+                        wait_time = random.uniform(0.3, 0.7)
+                        self._telemetry[-1].log_wait(wait_time, WaitReason.MOUSE_MOVE, context)
+                        await asyncio.sleep(wait_time)
+                    except Exception as e:
+                        if "Execution context was destroyed" in str(e):
+                            self._telemetry[-1].record_error(e, fatal=False, context=context)
+                        else:
+                            self._telemetry[-1].record_error(e, fatal=False, context=context)
 
                 except Exception as e:
-                    logger.warning(f"Error establishing session: {e}, continuing anyway")
-                    await asyncio.sleep(random.uniform(1.0, 2.0))
+                    self._telemetry[-1].record_error(e, fatal=False, context=context)
+                    wait_time = random.uniform(1.0, 2.0)
+                    self._telemetry[-1].log_wait(wait_time, WaitReason.SESSION_ERROR, context)
+                    await asyncio.sleep(wait_time)
 
                 # Now set up strict request interception for chapter AJAX requests
-                await self._setup_request_interception("ajax/read", capture_only=False, target_url=chapter_url)
+                await self._setup_request_interception(target_url=chapter_url)
 
                 # Load chapter page with timeout and retry logic
+                context = "chapter_page_load"
                 logger.debug(f"Loading chapter page to get VRF: {chapter_url}")  # pylint: disable=W1203
 
                 # Now navigate to the chapter page
-                try:
-                    response = await self.page.goto(chapter_url, wait_until="domcontentloaded", timeout=30000)
+                response = await self.page.goto(chapter_url, wait_until="domcontentloaded", timeout=30000)
 
-                    # Check if we were redirected back to main page (bot detection)
-                    current_url = self.page.url
-                    if current_url == self.base_url or current_url == f"{self.base_url}/":
-                        logger.warning(f"Detected redirect to main page. Current URL: {current_url}")
-                        raise Exception("Bot detected: redirected to main page")
-
-                    # Check response status
-                    if response and response.status >= 400:
-                        logger.warning(f"Received status {response.status} for {chapter_url}")
-                        raise Exception(f"HTTP {response.status} error")
-
-                except Exception as e:
-                    if "redirected" in str(e).lower() or "bot detected" in str(e).lower():
-                        raise
-                    logger.warning(f"Navigation error: {e}, retrying...")
-                    await asyncio.sleep(random.uniform(2.0, 3.0))
-                    response = await self.page.goto(chapter_url, wait_until="domcontentloaded", timeout=30000)
-                    current_url = self.page.url
-                    if current_url == self.base_url or current_url == f"{self.base_url}/":
-                        raise Exception("Bot detected: redirected to main page after retry")
+                if self.page.url.rstrip("/") == self.base_url.rstrip("/"):
+                    error = DetectedError("Bot detected: redirected to main page")
+                    self._telemetry[-1].record_error(error, fatal=True, context=context)
+                    raise error
 
                 # Human-like delay after page load
                 wait_time = random.uniform(1.5, 3.0)
+                self._telemetry[-1].log_wait(wait_time, WaitReason.PAGE_LOAD, context)
                 await asyncio.sleep(wait_time)
 
                 # Simulate reading behavior: scroll down slowly
@@ -380,40 +390,41 @@ class VRFGenerator:
 
                 # Wait for page to be fully loaded
                 try:
-                    await self.page.wait_for_load_state("networkidle", timeout=15000)
+                    await self.page.wait_for_load_state("domcontentloaded", timeout=15000)
                 except Exception:
-                    logger.debug("Network idle timeout, continuing anyway")
-                    pass
+                    self._telemetry[-1].record_error(Exception("Network idle timeout, continuing anyway"), fatal=False, context=context)
 
                 # Additional wait for AJAX requests
                 wait_time = random.uniform(2.0, 4.0)
+                self._telemetry[-1].log_wait(wait_time, WaitReason.AJAX_REQUEST, context)
                 await asyncio.sleep(wait_time)
 
                 # Check again if we're still on the correct page
                 current_url = self.page.url
                 if current_url == self.base_url or current_url == f"{self.base_url}/":
-                    raise Exception("Bot detected: redirected to main page after page load")
+                    self._telemetry[-1].record_error(DetectedError("Bot detected: redirected to main page after page load"), fatal=True, context=context)
+                    raise DetectedError("Bot detected: redirected to main page after page load")
 
                 # Extract VRF from captured URL
                 if not self._captured_url:
+                    error = VRFGeneratorError(f"Unable to capture AJAX request for chapter URL: {chapter_url}")
+                    self._telemetry[-1].record_error(error, fatal=True, context=context)
                     raise VRFGeneratorError(f"Unable to capture AJAX request for chapter URL: {chapter_url}")  # pylint: disable=W0719
 
                 parsed_url = urlparse(self._captured_url)
-                path = parsed_url.path
                 query_params = parse_qs(parsed_url.query)
                 vrf = query_params.get('vrf', [None])[0]
 
                 if not vrf:
-                    raise Exception(f"Unable to find VRF token in captured URL: {self._captured_url}")  # pylint: disable=W0719
+                    error = VRFGeneratorError(f"Unable to find VRF token in captured URL: {self._captured_url}")
+                    self._telemetry[-1].record_error(error, fatal=True, context=context)
+                    raise error
 
                 # Cache the result
-                self._vrf_cache[chapter_url] = (path, vrf)
+                self._vrf_cache[chapter_url] = (parsed_url.path, vrf)
                 logger.debug("Successfully obtained VRF token for chapter")
-                return path, vrf
+                return parsed_url.path, vrf
 
-            except Exception as e:
-                logger.error(f"Error getting chapter VRF token: {e}")  # pylint: disable=W1203
-                raise
             finally:
                 # Cleanup: close page/context like Kotlin destroys WebView
                 if self.page:
