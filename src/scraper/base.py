@@ -125,7 +125,7 @@ class BaseScraper:
                 response = self._session.get(
                     url=url,
                     params=params,
-                    timeout=10,
+                    timeout=30,
                     headers=default_headers,
                     stream=stream,
                     verify=ssl_option['verify']
