@@ -12,3 +12,4 @@ museum/
 alembic/
 alembic.ini
 tags.json
+logger_config.yml
