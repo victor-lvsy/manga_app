@@ -44,7 +44,7 @@ class AsuraScansScraper(BaseScraper):
         cover_url = next((image.get("src") for image in images if image.get("alt") == "poster"), None)
         if not cover_url:
             for image in images:
-                print(image)
+                logger.debug(f"Image: {image.get('src')}")
         response = self._get_from_url(cover_url)
         return response.content, cover_url
 
@@ -66,6 +66,10 @@ class AsuraScansScraper(BaseScraper):
 
     async def refresh_comic(self, comic: Comic) -> Tuple[str, int]:
         """TODO"""
+        valid, chapter_count, error = self.validate_url_and_get_chapter_count(comic.url)
+        if not valid:
+            logger.error(f"Error validating URL: {error}")
+            return comic.name, 0
         response = self._get_from_url(comic.url)
         soup = bs4.BeautifulSoup(response.content, "html.parser")
         if not self.check_if_comic_cover_exists(comic):
