@@ -43,7 +43,7 @@ class MangaUpdater:
     async def force_update(self, comic: Comic):
         """TODO"""
         try:
-            logger.debug(f"Updating {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            logger.info(f"Updating {comic.name}...")  # pylint: disable=logging-fstring-interpolation
             if comic.scanlation_group == ScanlationGroup.ASURA_SCANS:
                 scraper = AsuraScansScraper()
                 name, count = await scraper.refresh_comic(comic)
