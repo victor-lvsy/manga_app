@@ -39,8 +39,8 @@ def validate_url(url: str) -> str:
     return url
 
 
-class Http520Error(Exception):
-    """Exception raised when a HTTP 520 error occurs"""
+class Http520521Error(Exception):
+    """Exception raised when a HTTP 520 or 521 error occurs"""
     def __init__(self, message: str, response: requests.Response):
         super().__init__(message)
         self.message = message
@@ -142,8 +142,9 @@ class BaseScraper:
                 )
 
                 if raise_for_status:
-                    if response.status_code == 520:
-                        raise Http520Error("HTTP 520 error", response)
+                    if response.status_code == 520 or response.status_code == 521:
+                        raise Http520521Error("HTTP 520 or 521 error", response)
+
                     response.raise_for_status()
 
                 return response
@@ -154,8 +155,8 @@ class BaseScraper:
                     logger.error("All SSL verification methods failed")
                     raise e
                 continue
-            except Http520Error as e:
-                logger.warning(f"HTTP 520 error: {e}")  # pylint: disable=logging-fstring-interpolation
+            except Http520521Error as e:
+                logger.warning(f"HTTP 520 or 521 error: {e}")  # pylint: disable=logging-fstring-interpolation
                 if retry < 3:
                     return self._get_from_url(url, params, headers, raise_for_status, stream, referer, retry + 1)
                 raise e
