@@ -50,7 +50,6 @@ class MangaUpdater:
             elif comic.scanlation_group == ScanlationGroup.MANGA_FIRE:
                 scraper = MangaFireToScraper()
                 name, count = await scraper.refresh_comic(comic)
-                print(scraper.vrf_generator.display_telemetry())
             else:
                 raise ValueError(f"Invalid scanlation group: {comic.scanlation_group}")
 
