@@ -109,7 +109,7 @@ async def blacklist_delete_chapter(
 
     try:
         # Add chapter number to blacklist
-        comic_repo.add_blacklist_chapter(int(manga_id), chapter.number)
+        comic_repo.add_blacklist_chapter(int(manga_id), float(chapter.number))
         # Delete the chapter
         chapter_repo.delete_chapter(chapter.id)
         logger.debug(f"Chapter {chapter.number} blacklisted and deleted")  # pylint: disable=logging-fstring-interpolation

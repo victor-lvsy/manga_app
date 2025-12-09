@@ -8,7 +8,7 @@ from src.reader.context_manager import get_context_manager
 from src.scraper.vrf_telemetry import VRFGeneratorTelemetry, WaitReason
 from src.logger import Logger
 try:
-    from playwright.async_api import async_playwright, Browser, Page, Route
+    from playwright.async_api import async_playwright, Browser, Page, Route, Error as PlaywrightError
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
@@ -358,36 +358,42 @@ class VRFGenerator:
 
                 # Load chapter page with timeout and retry logic
                 context = "chapter_page_load"
-                logger.debug(f"Loading chapter page to get VRF: {chapter_url}")  # pylint: disable=W1203
+                try:
+                    logger.debug(f"Loading chapter page to get VRF: {chapter_url}")  # pylint: disable=W1203
 
-                # Now navigate to the chapter page
-                response = await self.page.goto(chapter_url, wait_until="domcontentloaded", timeout=30000)
+                    # Now navigate to the chapter page
+                    response = await self.page.goto(chapter_url, wait_until="domcontentloaded", timeout=30000)
 
-                if self.page.url.rstrip("/") == self.base_url.rstrip("/"):
-                    error = DetectedError("Bot detected: redirected to main page")
-                    self._telemetry[-1].record_error(error, fatal=True, context=context)
-                    raise error
+                    if self.page.url.rstrip("/") == self.base_url.rstrip("/"):
+                        error = DetectedError("Bot detected: redirected to main page")
+                        self._telemetry[-1].record_error(error, fatal=True, context=context)
+                        raise error
 
-                # Human-like delay after page load
-                wait_time = random.uniform(1.5, 3.0)
-                self._telemetry[-1].log_wait(wait_time, WaitReason.PAGE_LOAD, context)
-                await asyncio.sleep(wait_time)
+                    # Human-like delay after page load
+                    wait_time = random.uniform(1.5, 3.0)
+                    self._telemetry[-1].log_wait(wait_time, WaitReason.PAGE_LOAD, context)
+                    await asyncio.sleep(wait_time)
 
-                # Simulate reading behavior: scroll down slowly
-                await self.page.evaluate("""
-                    (async () => {
-                        const scrollHeight = document.documentElement.scrollHeight;
-                        const viewportHeight = window.innerHeight;
-                        const scrollSteps = 5;
-                        const stepSize = (scrollHeight - viewportHeight) / scrollSteps;
+                    # Simulate reading behavior: scroll down slowly
+                    await self.page.evaluate("""
+                        (async () => {
+                            const scrollHeight = document.documentElement.scrollHeight;
+                            const viewportHeight = window.innerHeight;
+                            const scrollSteps = 5;
+                            const stepSize = (scrollHeight - viewportHeight) / scrollSteps;
 
-                        for (let i = 0; i < scrollSteps; i++) {
-                            window.scrollTo(0, stepSize * (i + 1));
-                            await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
-                        }
-                    })();
-                """)
-
+                            for (let i = 0; i < scrollSteps; i++) {
+                                window.scrollTo(0, stepSize * (i + 1));
+                                await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+                            }
+                        })();
+                    """)
+                except PlaywrightError as e:
+                    self._telemetry[-1].record_error(e, fatal=False, context=context)
+                    raise VRFGeneratorError(f"{context}: {e}") from e
+                except Exception as e:
+                    self._telemetry[-1].record_error(e, fatal=True, context=context)
+                    raise e
                 # Wait for page to be fully loaded
                 try:
                     await self.page.wait_for_load_state("domcontentloaded", timeout=15000)
@@ -408,8 +414,8 @@ class VRFGenerator:
                 # Extract VRF from captured URL
                 if not self._captured_url:
                     error = VRFGeneratorError(f"Unable to capture AJAX request for chapter URL: {chapter_url}")
-                    self._telemetry[-1].record_error(error, fatal=True, context=context)
-                    raise VRFGeneratorError(f"Unable to capture AJAX request for chapter URL: {chapter_url}")  # pylint: disable=W0719
+                    self._telemetry[-1].record_error(error, fatal=False, context=context)
+                    raise error
 
                 parsed_url = urlparse(self._captured_url)
                 query_params = parse_qs(parsed_url.query)
@@ -417,7 +423,7 @@ class VRFGenerator:
 
                 if not vrf:
                     error = VRFGeneratorError(f"Unable to find VRF token in captured URL: {self._captured_url}")
-                    self._telemetry[-1].record_error(error, fatal=True, context=context)
+                    self._telemetry[-1].record_error(error, fatal=False, context=context)
                     raise error
 
                 # Cache the result
