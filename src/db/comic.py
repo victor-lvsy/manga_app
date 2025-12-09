@@ -110,7 +110,7 @@ class ComicRepository:
         try:
             comic = self.get_comic(comic_id)
             if chapter_number not in comic.blacklist_chapters:
-                print(f"Adding chapter {chapter_number} to blacklist")
+                logger.debug(f"Adding chapter {chapter_number} from comic {comic.name} to blacklist")  # pylint: disable=logging-fstring-interpolation
                 comic.blacklist_chapters = [*comic.blacklist_chapters, chapter_number]
             self.session.add(comic)
             self.session.commit()
