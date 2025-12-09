@@ -39,6 +39,14 @@ def validate_url(url: str) -> str:
     return url
 
 
+class Http520Error(Exception):
+    """Exception raised when a HTTP 520 error occurs"""
+    def __init__(self, message: str, response: requests.Response):
+        super().__init__(message)
+        self.message = message
+        self.response = response
+
+
 class BaseScraper:
     """TODO"""
     def __init__(self, host: str):
@@ -90,8 +98,10 @@ class BaseScraper:
 
         return session
 
-    def _get_from_url(self, url: str, params: dict = None, headers: dict = None, raise_for_status: bool = True, stream: bool = False, referer: str = None) -> requests.Response:
+    def _get_from_url(self, url: str, params: dict = None, headers: dict = None, raise_for_status: bool = True, stream: bool = False, referer: str = None, retry: int = 0) -> requests.Response:
         """Make a GET request using the session with SSL fallback options"""
+        if retry > 3:
+            raise requests.exceptions.RequestException("Max retries reached")
         default_headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0',
             'Referer': self.host,
@@ -132,6 +142,8 @@ class BaseScraper:
                 )
 
                 if raise_for_status:
+                    if response.status_code == 520:
+                        raise Http520Error("HTTP 520 error", response)
                     response.raise_for_status()
 
                 return response
@@ -142,6 +154,11 @@ class BaseScraper:
                     logger.error("All SSL verification methods failed")
                     raise e
                 continue
+            except Http520Error as e:
+                logger.warning(f"HTTP 520 error: {e}")  # pylint: disable=logging-fstring-interpolation
+                if retry < 3:
+                    return self._get_from_url(url, params, headers, raise_for_status, stream, referer, retry + 1)
+                raise e
             except Exception as e:
                 logger.error(f"Non-SSL error: {e}")  # pylint: disable=logging-fstring-interpolation
                 raise e
