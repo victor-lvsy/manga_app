@@ -486,3 +486,10 @@ class VRFGenerator:
     def get_chapter_vrf_sync(self, chapter_url: str) -> str:
         """Alias for get_chapter_vrf (for compatibility)"""
         return self.get_chapter_vrf(chapter_url)
+
+    def display_telemetry(self) -> str:
+        """Display the telemetry"""
+        telemetry_str = ""
+        for telemetry in self._telemetry:
+            telemetry_str += f"{telemetry.to_dict()}\n"
+        return telemetry_str

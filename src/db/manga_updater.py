@@ -45,9 +45,12 @@ class MangaUpdater:
         try:
             logger.debug(f"Updating {comic.name}")  # pylint: disable=logging-fstring-interpolation
             if comic.scanlation_group == ScanlationGroup.ASURA_SCANS:
-                name, count = await AsuraScansScraper().refresh_comic(comic)
+                scraper = AsuraScansScraper()
+                name, count = await scraper.refresh_comic(comic)
             elif comic.scanlation_group == ScanlationGroup.MANGA_FIRE:
-                name, count = await MangaFireToScraper().refresh_comic(comic)
+                scraper = MangaFireToScraper()
+                name, count = await scraper.refresh_comic(comic)
+                print(scraper.vrf_generator.display_telemetry())
             else:
                 raise ValueError(f"Invalid scanlation group: {comic.scanlation_group}")
 

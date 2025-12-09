@@ -25,7 +25,7 @@ reader:
   auth: INFO
   library: INFO
   manga-router: INFO
-  chapter-router: INFO
+  chapter-router: DEV
   add-manga: DEV
   base-scraper: INFO
   asura-scans: INFO
