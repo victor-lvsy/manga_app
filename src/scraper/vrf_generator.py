@@ -390,7 +390,7 @@ class VRFGenerator:
                     """)
                 except PlaywrightError as e:
                     self._telemetry[-1].record_error(e, fatal=False, context=context)
-                    raise VRFGeneratorError(f"{context}: {e}")
+                    raise VRFGeneratorError(f"{context}: {e}")  # pylint: disable=W0707
                 except Exception as e:
                     self._telemetry[-1].record_error(e, fatal=True, context=context)
                     raise e
