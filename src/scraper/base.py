@@ -236,6 +236,8 @@ class BaseScraper:
             extention = ".jpg"
         elif page_url.endswith(".webp"):
             extention = ".webp"
+        elif page_url.endswith(".png"):
+            extention = ".png"
         else:
             logger.error(f"Unsupported image format: {page_url}")  # pylint: disable=logging-fstring-interpolation
             raise ValueError(f"Unsupported image format: {page_url}")
