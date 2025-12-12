@@ -53,7 +53,7 @@ class MangaUpdater:
             else:
                 raise ValueError(f"Invalid scanlation group: {comic.scanlation_group}")
 
-            if count > 0 and comic.status != Status.ONGOING:
+            if count > 0 and comic.status == Status.HIATUS:
                 self.comic_repository.update_comic_status(comic.id, Status.ONGOING)
             self.comic_repository.update_comic_update_status(comic.id, UpdateStatus.SUCCESS)
             return name, count
