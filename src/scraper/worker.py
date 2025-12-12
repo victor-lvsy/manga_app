@@ -46,9 +46,9 @@ class WorkerContext:
         if comic.update_status == UpdateStatus.PENDING:
             logger.debug(f"Comic: {comic.name} is already being updated")
             return
-        if comic.status == Status.COMPLETED and len(comic.chapters) > 0:
-            logger.debug(f"Comic: {comic.name} is completed, skipping update")
-            return
+        # if comic.status == Status.COMPLETED and len(comic.chapters) > 0:
+        #     logger.debug(f"Comic: {comic.name} is completed, skipping update")
+        #     return
         await self.queue.put(comic)
         with DatabaseAccessLayer().managed_session() as session:
             comic_repo = ComicRepository(session)
