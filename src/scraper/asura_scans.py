@@ -48,6 +48,13 @@ class AsuraScansScraper(BaseScraper):
         response = self._get_from_url(cover_url)
         return response.content, cover_url
 
+    def get_comic_synopsis(self, soup: bs4.BeautifulSoup):
+        """TODO"""
+        logger.debug("Getting comic synopsis...")
+        span = soup.find("span", class_="font-medium text-sm text-[#A2A2A2]")
+        children = span.contents
+        return ''.join(str(child) for child in children)
+
     def validate_url_and_get_chapter_count(self, url: str):
         """Validate if a manga exists at the given URL and return chapter count"""
         try:
@@ -75,6 +82,10 @@ class AsuraScansScraper(BaseScraper):
         if not self.check_if_comic_cover_exists(comic):
             cover_content, cover_url = self.get_comic_cover(soup)
             self.save_comic_cover(comic, cover_content, cover_url)
+
+        if not self.check_if_comic_synopsis_exists(comic):
+            synopsis = self.get_comic_synopsis(soup)
+            self.save_comic_synopsis(comic, synopsis)
 
         chapter_links = self.get_chapter_links(soup)
         chapters = self.extract_chapters(chapter_links)
@@ -153,4 +164,4 @@ class AsuraScansScraper(BaseScraper):
 
 if __name__ == "__main__":
     with AsuraScansScraper() as scraper:
-        scraper.scan_for_new_chapters()
+        print(scraper.get_comic_synopsis(bs4.BeautifulSoup(scraper._get_from_url("https://asuracomic.net/series/echoes-of-the-reverse-planet-437b7f62").content, "html.parser")))

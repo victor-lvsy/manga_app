@@ -42,8 +42,6 @@ class MangaUpdater:
 
     async def force_update(self, comic: Comic):
         """TODO"""
-        if comic.status == Status.COMPLETED and len(comic.chapters) > 0:
-            return None, 0
         try:
             logger.info(f"Updating {comic.name}...")  # pylint: disable=logging-fstring-interpolation
             if comic.scanlation_group == ScanlationGroup.ASURA_SCANS:

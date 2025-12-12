@@ -2,7 +2,7 @@
 import asyncio
 from typing import Optional
 from src.logger import Logger
-from src.db import Comic, ComicRepository, DatabaseAccessLayer, UpdateStatus
+from src.db import Comic, ComicRepository, DatabaseAccessLayer, UpdateStatus, Status
 from src.db.manga_updater import MangaUpdater
 
 logger = Logger("worker-context")
@@ -45,6 +45,9 @@ class WorkerContext:
         """Put a comic into the queue"""
         if comic.update_status == UpdateStatus.PENDING:
             logger.debug(f"Comic: {comic.name} is already being updated")
+            return
+        if comic.status == Status.COMPLETED and len(comic.chapters) > 0:
+            logger.debug(f"Comic: {comic.name} is completed, skipping update")
             return
         await self.queue.put(comic)
         with DatabaseAccessLayer().managed_session() as session:

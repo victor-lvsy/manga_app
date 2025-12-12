@@ -6,7 +6,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional, TYPE_CHECKING, List
 from sqlmodel import SQLModel, Field, Relationship, Column
-from sqlalchemy import JSON
+from sqlalchemy import JSON, Text
 
 from .user_schema import UserComicLink, UserChapterLink
 
@@ -106,6 +106,7 @@ class Comic(SQLModel, table=True):
     __tablename__ = "Comic"
     id: int | None = Field(default=None, primary_key=True)
     name: str
+    synopsis: str | None = Field(sa_column=Column(Text), default=None)
     url: str
     local_path: str
     last_updated: datetime

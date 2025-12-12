@@ -187,3 +187,17 @@ class ComicRepository:
     def get_all_tags(self) -> list[Tag]:
         """TODO"""
         return self.session.exec(select(Tag)).all()
+
+    def update_comic_synopsis(self, comic_id: int, synopsis: str):
+        """TODO"""
+        try:
+            comic = self.get_comic(comic_id)
+            comic.synopsis = synopsis
+            self.session.add(comic)
+            self.session.commit()
+            self.session.refresh(comic)
+            logger.debug(f"Comic synopsis updated: {comic.name}")  # pylint: disable=logging-fstring-interpolation
+            return comic
+        except IntegrityError as e:
+            self.session.rollback()
+            raise e

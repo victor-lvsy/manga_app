@@ -69,10 +69,12 @@ class MangaFireToScraper(BaseScraper):
         """TODO"""
         response = self._get_from_url(comic.url)
         soup = bs4.BeautifulSoup(response.content, "html.parser")
+        if not self.check_if_comic_synopsis_exists(comic):
+            synopsis = self.get_comic_synopsis(soup)
+            self.save_comic_synopsis(comic, synopsis)
         if not self.check_if_comic_cover_exists(comic):
             cover_content, cover_url = self.get_comic_cover(soup)
             self.save_comic_cover(comic, cover_content, cover_url)
-
         chapters = self.get_chapter_links(soup)
         count = 0
         for chapter in chapters:
@@ -108,6 +110,13 @@ class MangaFireToScraper(BaseScraper):
         cover_url = cover_img.get("src")
         response = self._get_from_url(cover_url)
         return response.content, cover_url
+
+    def get_comic_synopsis(self, soup: bs4.BeautifulSoup):
+        """TODO"""
+        logger.debug("Getting comic synopsis...")
+        synopsis_div = soup.find('div', attrs={'id': 'synopsis'})
+        synopsis = synopsis_div.text.strip()
+        return synopsis
 
     def validate_url_and_get_chapter_count(self, url: str):
         """Validate if a manga exists at the given URL and return chapter count"""

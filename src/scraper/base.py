@@ -279,9 +279,21 @@ class BaseScraper:
         """TODO"""
         raise NotImplementedError("Subclasses must implement get_comic_cover")
 
+    def get_comic_synopsis(self, soup: bs4.BeautifulSoup):
+        """TODO"""
+        raise NotImplementedError("Subclasses must implement get_comic_synopsis")
+
     def check_if_comic_cover_exists(self, comic: Comic) -> bool:
         """TODO"""
         return any(os.path.exists(os.path.join(LOCAL_FOLDER, comic.local_path, f"cover.{ext}")) for ext in ["webp", "jpg", "jpeg", "png", "gif"])
+
+    def check_if_comic_synopsis_exists(self, comic: Comic) -> bool:
+        """TODO"""
+        return comic.synopsis is not None
+
+    def save_comic_synopsis(self, comic: Comic, synopsis: str):
+        """TODO"""
+        self.comic_repository.update_comic_synopsis(comic.id, synopsis)
 
     def save_comic_cover(self, comic: Comic, cover_content: bytes, cover_url: str):
         """TODO"""
